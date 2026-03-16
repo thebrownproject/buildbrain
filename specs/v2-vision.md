@@ -257,6 +257,92 @@ The moat is the combination. Any one of these is a feature. All five together is
 
 ---
 
+## Persistent Memory — The Builder's Second Brain
+
+Inspired by OpenClaw's architecture (247K GitHub stars, plain Markdown memory + hybrid vector/BM25 search over SQLite). The idea: a construction-specific agent that gets smarter with every project because it remembers the builder's preferences, past projects, supplier relationships, and lessons learned.
+
+### Why This Matters
+
+A senior estimator's value isn't math — it's institutional knowledge. They know the architect always forgets fire ratings, that Boral's lead time blows out in November, that council in this LGA wants 2-hour fire walls. When they leave the company, that knowledge walks out the door.
+
+An agent with persistent memory is institutional knowledge that doesn't quit.
+
+### What the Agent Remembers
+
+| Category | Examples | How It's Used |
+|----------|----------|---------------|
+| **Builder Preferences** | "Always use James Hardie Scyon, not render. Standard markup 15%. Reports in landscape PDF." | Auto-applies to every takeoff without asking |
+| **Supplier Knowledge** | "Boral: next-day concrete. Holcim: 3 days. Bunnings Trade: MGP10 studs $4.20/LM as of Feb 2026." | Material lists include preferred suppliers and lead times |
+| **Project History** | "Last duplex in Marrickville: 142 external walls, $87/m² installed. 15% more doors than schedule showed." | Informs estimates on similar projects, flags patterns |
+| **Architect Patterns** | "ArchiCAD exports from Smith & Co always miss door fire ratings. Their IFC uses custom property sets." | Pre-empts known issues when processing files from that firm |
+| **Local Requirements** | "Randwick council requires 2-hour fire walls to boundary. Mosman requires DA for any work visible from street." | Compliance checks tailored to the actual job location |
+| **Pricing History** | "Concrete N32: $245/m³ in Jan, $258/m³ in March. Trending up ~5%/quarter." | Rate adjustments and cost forecasting |
+| **Lessons Learned** | "Last 3 projects underestimated window flashings by 20%. Add 25% waste factor." | Self-correcting estimates based on actual outcomes |
+
+### Memory Architecture (OpenClaw Pattern)
+
+```
+builder_workspace/
+├── MEMORY.md                      # Curated long-term: preferences, suppliers, standards
+├── memory/
+│   ├── 2026-03-16.md              # Daily log: what was extracted, decisions made
+│   ├── 2026-03-17.md
+│   └── ...
+├── projects/
+│   ├── marrickville-duplex/       # Per-project extraction data + takeoff outputs
+│   ├── randwick-townhouse/
+│   └── ...
+└── knowledge/
+    ├── wall-assemblies.md         # Construction methodology reference
+    ├── supplier-contacts.md       # Supplier database
+    └── local-requirements.md      # Council-specific requirements
+```
+
+**Storage:** Plain Markdown files (transparent, editable, auditable) + SQLite with vector extensions for semantic search across all memory.
+
+**Hybrid retrieval:** 70% vector similarity + 30% BM25 keyword search. Temporal decay on daily notes (half-life 30 days), no decay on MEMORY.md or knowledge files.
+
+**Pre-compaction flush:** Before context is summarized, agent writes durable info to memory. Nothing gets lost between sessions.
+
+### How It Gets Smarter Over Time
+
+```
+Project 1: "What stud spacing do you use?"
+Builder:   "450 centres for external, 600 for internal"
+Agent:     [saves to MEMORY.md]
+
+Project 2: [automatically uses 450/600 without asking]
+
+Project 5: "Last 3 projects, internal walls came in 8% over
+            the takeoff. Should I adjust the waste factor?"
+Builder:   "Yeah bump it to 12%"
+Agent:     [updates MEMORY.md, applies to all future projects]
+
+Project 10: "This architect's IFC exports always miss fire ratings.
+             Based on their last 3 projects, expect ~15 fire doors
+             even though the IFC shows 0. Flagging for manual check."
+```
+
+### Trust and Safety
+
+- **Start as a second pair of eyes** — drafts takeoffs for builder to review, not autonomous ordering
+- **Memory is auditable** — plain Markdown, builder can open and edit any file
+- **Accuracy compounds but so do errors** — memory needs version control so bad data can be corrected and the correction propagates
+- **Builder controls what's remembered** — "remember this" / "forget this" are explicit commands
+- **Pricing data expires** — temporal decay ensures stale rates don't persist indefinitely
+
+### Channel Integration
+
+Builders live on their phones. An OpenClaw-style messaging integration means:
+- Send a photo of a drawing on WhatsApp → agent reads it and responds with quantities
+- Voice message: "How many bricks for the north wall?" → agent checks the IFC and responds
+- Forward a PDF from the architect → agent scans it and flags issues
+- All on the channels builders already use (WhatsApp, SMS, iMessage)
+
+The construction brain + persistent memory + messaging channels = an estimator in your pocket that knows your business.
+
+---
+
 ## Open Questions for V2
 
 1. **Construction knowledge representation** — structured database vs system prompt knowledge vs hybrid? How do you handle regional variations (AU vs NZ vs UK)?
