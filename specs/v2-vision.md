@@ -331,15 +331,32 @@ Project 10: "This architect's IFC exports always miss fire ratings.
 - **Builder controls what's remembered** — "remember this" / "forget this" are explicit commands
 - **Pricing data expires** — temporal decay ensures stale rates don't persist indefinitely
 
-### Channel Integration
+### Interface — Chat App + IFC Viewer
 
-Builders live on their phones. An OpenClaw-style messaging integration means:
-- Send a photo of a drawing on WhatsApp → agent reads it and responds with quantities
-- Voice message: "How many bricks for the north wall?" → agent checks the IFC and responds
-- Forward a PDF from the architect → agent scans it and flags issues
-- All on the channels builders already use (WhatsApp, SMS, iMessage)
+A purpose-built web/mobile app with two panels:
 
-The construction brain + persistent memory + messaging channels = an estimator in your pocket that knows your business.
+```
+┌──────────────────────┬─────────────────────────┐
+│                      │                         │
+│    IFC 3D Viewer     │     Chat Interface      │
+│                      │                         │
+│  [click element]     │  Builder: "What's the   │
+│  [highlight walls]   │   fire rating on this    │
+│  [toggle levels]     │   door?"                │
+│  [section cuts]      │                         │
+│                      │  Agent: "D-14, Level 2  │
+│                      │   stair core. No fire   │
+│                      │   rating in IFC. PDF    │
+│                      │   spec requires FRL-60" │
+│                      │                         │
+└──────────────────────┴─────────────────────────┘
+```
+
+- **IFC viewer** (xeokit or IFC.js) — 3D model, click elements to query, highlight results from agent queries, colour-code by property (fire rated = red, compliant = green)
+- **Chat** — conversational interface, drag-and-drop file upload, inline tables and reports
+- **Linked** — agent highlights elements in the viewer as it discusses them. Builder clicks a wall in the viewer and asks "takeoff this wall type"
+
+The viewer gives spatial context that pure text can't. "The 3 doors without fire ratings are all in the Level 2 stair core" hits different when you can see them highlighted in red on the model.
 
 ---
 
