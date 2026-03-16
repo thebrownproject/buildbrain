@@ -76,4 +76,5 @@ pip install ifcopenshell pdfplumber pandas
 ## References
 
 Full spec: `specs/spec.md`
+V2 vision (conversational agent, trade-level takeoffs, persistent memory): `specs/v2-vision.md`
 CLI reference: `/cli-tools`
