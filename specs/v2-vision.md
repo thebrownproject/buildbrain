@@ -43,17 +43,18 @@ The agent meets architects and builders where they already are — reading the f
 
 ---
 
-## What V1 Built (the foundation)
+## What V1 Built
 
-V1 is the **extraction layer** — the agent's eyes:
+V1 is a working AI agent — Claude Code is the brain, the CLI tools are the hands:
 
-- `ifc_extract.py` — reads IFC models, extracts elements, properties, quantities
-- `pdf_extract.py` — reads PDFs, extracts text, tables, schedules
-- Cross-validation — compares IFC vs PDF, flags discrepancies
-- Structured reports — QTO tables, element schedules, compliance checklists
-- Claude Code plugin — skills wrapping CLI tools
+- **Extraction tools** — `ifc_extract.py` reads IFC models, `pdf_extract.py` reads PDFs
+- **AI reasoning** — Claude interprets the data, cross-validates between sources, flags discrepancies with actionable guidance, understands what a missing fire rating means
+- **Structured reports** — QTO tables, element schedules, compliance checklists
+- **Claude Code plugin** — skills that give Claude domain context for construction
 
-This works. 17/17 tests passing. But it's structured around commands (`/ifc-extract door --property Pset_DoorCommon.FireRating --not-null`), not conversations. And it outputs raw data, not trade-level deliverables.
+This works. 17/17 tests passing. Claude already reasons about construction data — when it says "IFC has 0 fire-rated doors but spec requires 12 FRL-60" it understands the implication. The intelligence is there.
+
+What V1 doesn't have is **construction methodology knowledge** (turning wall areas into material lists) and **trade-level outputs** (what a builder actually sends to suppliers). V2 deepens the brain, it doesn't add one.
 
 ---
 
