@@ -1,0 +1,8 @@
+{
+  "name": "buildbrain",
+  "description": "BIM Intelligence Agent — IFC and PDF construction data extraction, cross-validation, and reporting for Claude Code.",
+  "version": "0.1.0",
+  "author": {
+    "name": "The Brown Project"
+  }
+}
