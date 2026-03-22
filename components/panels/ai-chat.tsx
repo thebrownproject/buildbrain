@@ -74,7 +74,7 @@ export function AIChat() {
   return (
     <div className="flex h-full flex-col bg-bg-card">
       {/* Sub-bar */}
-      <div className="flex h-[36px] shrink-0 items-center justify-between border-b border-border px-4">
+      <div className="flex h-[36px] shrink-0 items-center justify-between px-4">
         <span className="text-[13px] font-medium text-text-secondary">Chat</span>
         <span className="text-[12px] text-text-muted">clinic-project.ifc</span>
       </div>

@@ -15,7 +15,7 @@ export function PDFViewer() {
 
   return (
     <div className="flex h-full flex-col bg-white">
-      <div className="flex h-[36px] shrink-0 items-center gap-1 overflow-x-auto border-b border-border px-3">
+      <div className="flex h-[36px] shrink-0 items-center gap-1 overflow-x-auto px-3">
         {SAMPLE_PDFS.map((pdf) => (
           <button
             key={pdf.file}

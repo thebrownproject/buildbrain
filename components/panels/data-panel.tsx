@@ -54,7 +54,7 @@ export function DataPanel() {
 
   return (
     <Tabs defaultValue="artifacts" className="flex h-full flex-col gap-0">
-      <TabsList variant="line" className="h-[36px] min-h-[36px] w-full justify-start border-b border-border px-1">
+      <TabsList variant="line" className="h-[36px] min-h-[36px] w-full justify-start px-1">
         <TabsTrigger value="artifacts" className="gap-2 text-[13px]">
           <FileText className="h-3.5 w-3.5" />Artifacts
         </TabsTrigger>

@@ -150,7 +150,7 @@
  */
 .dockview-buildbrain .dv-tabs-and-actions-container {
   background-color: #ffffff !important;
-  height: 36px !important;
+  height: 44px !important;
   font-size: 13px !important;
   font-weight: 450 !important;
   border-bottom: 1px solid lch(90.84% 0 282) !important;
@@ -164,7 +164,8 @@
 .dockview-buildbrain .dv-tab {
   border-radius: 9999px !important;
   padding: 2px 12px !important;
-  margin: 4px 0 !important;
+  margin: 8px 0 !important;
+  height: 28px !important;
   transition: background-color 0.15s, color 0.15s !important;
 }
 .dockview-buildbrain .dv-groupview.dv-active-group > .dv-tabs-and-actions-container .dv-tab.dv-active-tab {

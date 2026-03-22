@@ -151,7 +151,7 @@ export function IFCViewer() {
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden bg-white">
-      <div className="flex h-[36px] shrink-0 items-center justify-between border-b border-border px-4">
+      <div className="flex h-[36px] shrink-0 items-center justify-between px-4">
         <Badge variant="secondary" className="rounded border-0 font-mono text-text-muted">
           {status}
         </Badge>
