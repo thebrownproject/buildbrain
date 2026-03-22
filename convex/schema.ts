@@ -122,7 +122,8 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_thread", ["threadId"])
-    .index("by_thread_time", ["threadId", "createdAt"]),
+    .index("by_thread_time", ["threadId", "createdAt"])
+    .index("by_status", ["status"]),
 
   // ── Stream Deltas (ephemeral) ──────────────────────────────
   streamDeltas: defineTable({
@@ -258,5 +259,5 @@ export default defineSchema({
   })
     .index("by_group", ["groupId"])
     .index("by_project", ["projectId"])
-    .index("by_global_id", ["globalId"]),
+    .index("by_project_and_global_id", ["projectId", "globalId"]),
 });

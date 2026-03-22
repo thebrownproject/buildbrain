@@ -35,16 +35,26 @@ export const send = mutation({
     const thread = await ctx.db.get(args.threadId);
     if (!thread) throw new Error("Thread not found");
 
-    // Check queued job limit
-    const activeJobs = await ctx.db
+    // Check queued job limit (query each active status via index)
+    const queued = await ctx.db
       .query("agentJobs")
       .withIndex("by_project_status", (q) =>
-        q.eq("projectId", thread.projectId)
+        q.eq("projectId", thread.projectId).eq("status", "queued")
       )
-      .collect();
-    const queuedCount = activeJobs.filter(
-      (j) => j.status === "queued" || j.status === "claimed" || j.status === "running"
-    ).length;
+      .take(MAX_QUEUED_JOBS_PER_THREAD);
+    const claimed = await ctx.db
+      .query("agentJobs")
+      .withIndex("by_project_status", (q) =>
+        q.eq("projectId", thread.projectId).eq("status", "claimed")
+      )
+      .take(MAX_QUEUED_JOBS_PER_THREAD);
+    const running = await ctx.db
+      .query("agentJobs")
+      .withIndex("by_project_status", (q) =>
+        q.eq("projectId", thread.projectId).eq("status", "running")
+      )
+      .take(MAX_QUEUED_JOBS_PER_THREAD);
+    const queuedCount = queued.length + claimed.length + running.length;
     if (queuedCount >= MAX_QUEUED_JOBS_PER_THREAD) {
       throw new Error(
         "Agent is busy processing previous requests. Please wait."
@@ -65,7 +75,7 @@ export const send = mutation({
       projectId: thread.projectId,
       type: "chat_response",
       status: "queued",
-      input: { messageId, message: args.content },
+      input: { threadId: args.threadId, messageId, message: args.content },
       messageId,
       queuedAt: Date.now(),
     });

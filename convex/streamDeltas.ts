@@ -7,7 +7,7 @@ export const list = query({
     return await ctx.db
       .query("streamDeltas")
       .withIndex("by_message_index", (q) => q.eq("messageId", args.messageId))
-      .collect();
+      .take(500);
   },
 });
 

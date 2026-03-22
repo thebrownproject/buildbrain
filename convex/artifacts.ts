@@ -7,7 +7,7 @@ export const listByProject = query({
     const artifacts = await ctx.db
       .query("artifacts")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .collect();
+      .take(200);
     // Return metadata only (no content) for list view
     return artifacts.map(({ contentInline, contentStorageId, ...meta }) => ({
       ...meta,

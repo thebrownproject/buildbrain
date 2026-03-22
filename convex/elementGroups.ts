@@ -7,7 +7,7 @@ export const listByProject = query({
     return await ctx.db
       .query("elementGroups")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .collect();
+      .take(50);
   },
 });
 

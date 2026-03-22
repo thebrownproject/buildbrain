@@ -4,21 +4,43 @@ import { internalMutation, internalQuery, query } from "./_generated/server";
 export const getActive = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
-    const jobs = await ctx.db
+    const queued = await ctx.db
       .query("agentJobs")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .collect();
-    return jobs.filter(
-      (j) =>
-        j.status === "queued" ||
-        j.status === "claimed" ||
-        j.status === "running"
-    );
+      .withIndex("by_project_status", (q) =>
+        q.eq("projectId", args.projectId).eq("status", "queued")
+      )
+      .take(10);
+    const claimed = await ctx.db
+      .query("agentJobs")
+      .withIndex("by_project_status", (q) =>
+        q.eq("projectId", args.projectId).eq("status", "claimed")
+      )
+      .take(10);
+    const running = await ctx.db
+      .query("agentJobs")
+      .withIndex("by_project_status", (q) =>
+        q.eq("projectId", args.projectId).eq("status", "running")
+      )
+      .take(10);
+    return [...queued, ...claimed, ...running];
   },
 });
 
-// Agent VM: get pending jobs
+// Agent VM: get pending jobs (internal, for HTTP client with admin auth)
 export const getPending = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("agentJobs")
+      .withIndex("by_status", (q) => q.eq("status", "queued"))
+      .order("asc")
+      .collect();
+  },
+});
+
+// Agent VM: public subscription target for real-time job watching
+// Used by ConvexClient (WebSocket) which doesn't support admin auth
+export const getPendingPublic = query({
   args: {},
   handler: async (ctx) => {
     return await ctx.db
@@ -157,16 +179,17 @@ export const detectStaleJobs = internalMutation({
       }
     }
 
-    // Clean up orphaned stream deltas for error'd messages
+    // Clean up orphaned stream deltas for error'd messages (bounded to 20 per tick)
     const errorMessages = await ctx.db
       .query("messages")
-      .filter((q) => q.eq(q.field("status"), "error"))
-      .collect();
+      .withIndex("by_status", (q) => q.eq("status", "error"))
+      .take(20);
     for (const msg of errorMessages) {
       const deltas = await ctx.db
         .query("streamDeltas")
         .withIndex("by_message", (q) => q.eq("messageId", msg._id))
-        .collect();
+        .take(100);
+      if (deltas.length === 0) continue;
       for (const delta of deltas) {
         await ctx.db.delete(delta._id);
       }

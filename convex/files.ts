@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 
 const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024; // 500MB
 
@@ -9,7 +9,7 @@ export const listByProject = query({
     return await ctx.db
       .query("files")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .collect();
+      .take(50);
   },
 });
 
@@ -103,7 +103,7 @@ export const updatePdfMeta = internalMutation({
   },
 });
 
-export const getDownloadUrl = internalMutation({
+export const getDownloadUrl = internalQuery({
   args: { fileId: v.id("files") },
   handler: async (ctx, args) => {
     const file = await ctx.db.get(args.fileId);
