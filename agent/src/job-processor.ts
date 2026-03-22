@@ -1,8 +1,8 @@
-import type { ConvexClientWrapper, PendingJob } from "./convex-client.js";
+import type { ConvexClientWrapper, PendingJob, ThreadContext } from "./convex-client.js";
 import { config } from "./config.js";
 import { downloadFile, cleanupJob } from "./file-manager.js";
 import { StreamWriter } from "./stream-writer.js";
-import { runAgent } from "./agent-session.js";
+import { runAgent, type AgentRunResult } from "./agent-session.js";
 
 export async function processJob(
   job: PendingJob,
@@ -38,8 +38,8 @@ export async function processJob(
     const context = await convex.getThreadContext(threadId);
     await convex.updateProgress(jobId, 10, "Loading project context...");
 
-    // 4. Download files to temp directory
-    for (const file of context.files) {
+    // 4. Download files to temp directory (parallel)
+    const downloads = context.files.map(async (file) => {
       try {
         const localPath = await downloadFile(file._id, file.name, jobId, convex);
         console.log(`[job:${jobId}] Downloaded ${file.name} -> ${localPath}`);
@@ -47,7 +47,8 @@ export async function processJob(
         console.warn(`[job:${jobId}] Failed to download ${file.name}:`, err);
         // Non-fatal: not all files may be needed for every job
       }
-    }
+    });
+    await Promise.all(downloads);
     await convex.updateProgress(jobId, 20, "Files ready, starting agent...");
 
     // 5. Create assistant message
@@ -125,8 +126,8 @@ export async function processJob(
 }
 
 function buildContextSummary(
-  context: any,
-  result: any,
+  context: ThreadContext,
+  result: AgentRunResult,
 ): string {
   const parts: string[] = [];
 
@@ -134,14 +135,14 @@ function buildContextSummary(
 
   if (context.files?.length) {
     parts.push(
-      `Files: ${context.files.map((f: any) => `${f.name} (${f.type})`).join(", ")}`,
+      `Files: ${context.files.map((f) => `${f.name} (${f.type})`).join(", ")}`,
     );
   }
 
   if (result.toolCalls?.length) {
     const tools = result.toolCalls
-      .filter((t: any) => t.status === "complete")
-      .map((t: any) => `${t.tool} ${(t.args as any)?.command ?? ""}`.trim());
+      .filter((t) => t.status === "complete")
+      .map((t) => `${t.tool} ${(t.args as Record<string, unknown>)?.command ?? ""}`.trim());
     if (tools.length) {
       parts.push(`Tools used: ${tools.join(", ")}`);
     }

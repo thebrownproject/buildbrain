@@ -34,7 +34,7 @@ export const cleanup = internalMutation({
     const deltas = await ctx.db
       .query("streamDeltas")
       .withIndex("by_message", (q) => q.eq("messageId", args.messageId))
-      .collect();
+      .take(500);
     for (const delta of deltas) {
       await ctx.db.delete(delta._id);
     }

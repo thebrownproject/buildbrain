@@ -69,8 +69,8 @@ export async function writeElementList(
         storey: el.storey,
         type_name: el.type_name,
         material: el.material,
-        ...flattenProperties(el.properties),
-        ...flattenQuantities(el.quantities),
+        ...flattenNested(el.properties),
+        ...flattenNested(el.quantities),
       },
     }));
 
@@ -199,28 +199,14 @@ export async function writeValidationIssues(
   }
 }
 
-/** Flatten nested property sets into dot-notation keys */
-function flattenProperties(props?: Record<string, Record<string, unknown>>): Record<string, unknown> {
-  if (!props) return {};
+/** Flatten nested object groups (property sets, quantity sets) into dot-notation keys */
+function flattenNested(groups?: Record<string, Record<string, unknown>>): Record<string, unknown> {
+  if (!groups) return {};
   const flat: Record<string, unknown> = {};
-  for (const [pset, values] of Object.entries(props)) {
+  for (const [group, values] of Object.entries(groups)) {
     if (typeof values === "object" && values !== null) {
       for (const [key, val] of Object.entries(values)) {
-        flat[`${pset}.${key}`] = val;
-      }
-    }
-  }
-  return flat;
-}
-
-/** Flatten quantity sets into dot-notation keys */
-function flattenQuantities(qtos?: Record<string, Record<string, unknown>>): Record<string, unknown> {
-  if (!qtos) return {};
-  const flat: Record<string, unknown> = {};
-  for (const [qset, values] of Object.entries(qtos)) {
-    if (typeof values === "object" && values !== null) {
-      for (const [key, val] of Object.entries(values)) {
-        flat[`${qset}.${key}`] = val;
+        flat[`${group}.${key}`] = val;
       }
     }
   }

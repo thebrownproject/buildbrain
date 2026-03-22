@@ -11,8 +11,8 @@ import type { Id } from "../convex/_generated/dataModel";
  */
 
 // Projects
-export function useProjects() {
-  return useQuery(api.projects.listByUser);
+export function useProjects(userId: Id<"users"> | null) {
+  return useQuery(api.projects.listByUser, userId ? { userId } : "skip");
 }
 
 export function useProject(projectId: Id<"projects"> | null) {
@@ -87,8 +87,8 @@ export function useActiveJobs(projectId: Id<"projects"> | null) {
 }
 
 // User preferences
-export function useUserPreferences() {
-  return useQuery(api.users.getPreferences);
+export function useUserPreferences(userId: Id<"users"> | null) {
+  return useQuery(api.users.getPreferences, userId ? { userId } : "skip");
 }
 
 export function useUpdatePreferences() {

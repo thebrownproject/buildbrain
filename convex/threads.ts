@@ -37,7 +37,7 @@ export const getContext = internalQuery({
     const files = await ctx.db
       .query("files")
       .withIndex("by_project", (q) => q.eq("projectId", thread.projectId))
-      .collect();
+      .take(50);
 
     const limit = args.messageLimit ?? 10;
     const recentMessages = await ctx.db

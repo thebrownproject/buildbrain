@@ -34,7 +34,7 @@ export const getPending = internalQuery({
       .query("agentJobs")
       .withIndex("by_status", (q) => q.eq("status", "queued"))
       .order("asc")
-      .collect();
+      .take(100);
   },
 });
 
@@ -47,7 +47,7 @@ export const getPendingPublic = query({
       .query("agentJobs")
       .withIndex("by_status", (q) => q.eq("status", "queued"))
       .order("asc")
-      .collect();
+      .take(100);
   },
 });
 
@@ -132,15 +132,15 @@ export const detectStaleJobs = internalMutation({
   handler: async (ctx) => {
     const now = Date.now();
 
-    // Find all claimed/running jobs
+    // Find all claimed/running jobs (bounded to prevent transaction limit issues)
     const claimedJobs = await ctx.db
       .query("agentJobs")
       .withIndex("by_status", (q) => q.eq("status", "claimed"))
-      .collect();
+      .take(100);
     const runningJobs = await ctx.db
       .query("agentJobs")
       .withIndex("by_status", (q) => q.eq("status", "running"))
-      .collect();
+      .take(100);
     const activeJobs = [...claimedJobs, ...runningJobs];
 
     for (const job of activeJobs) {

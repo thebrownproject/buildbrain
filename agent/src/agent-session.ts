@@ -147,14 +147,16 @@ export async function runAgent(
         if (tc) {
           tc.status = event.isError ? "error" : "complete";
 
-          // Process structured results based on tool + command
-          if (!event.isError && event.result?.details?.raw) {
+          const raw = !event.isError ? event.result?.details?.raw : undefined;
+
+          if (raw) {
+            // Process structured results based on tool + command
             try {
               const ctx = makeWriteCtx(tc.tool, tc.args);
               await processToolResult(
                 tc.tool,
                 tc.args,
-                event.result.details.raw,
+                raw,
                 ctx,
                 convex,
                 artifactIds,
@@ -163,11 +165,8 @@ export async function runAgent(
             } catch (err) {
               console.error("Failed to write tool result:", err);
             }
-          }
 
-          // Build summary for the tool call
-          if (!event.isError && event.result?.details?.raw) {
-            const raw = event.result.details.raw;
+            // Build summary for the tool call
             tc.result = buildToolSummary(tc.tool, tc.args, raw);
           } else if (event.isError) {
             tc.result = "Error occurred";

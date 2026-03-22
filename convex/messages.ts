@@ -145,11 +145,11 @@ export const finalize = internalMutation({
     const { messageId, ...fields } = args;
     await ctx.db.patch(messageId, { ...fields, status: "complete" });
 
-    // Clean up stream deltas
+    // Clean up stream deltas (bounded to stay within transaction limits)
     const deltas = await ctx.db
       .query("streamDeltas")
       .withIndex("by_message", (q) => q.eq("messageId", messageId))
-      .collect();
+      .take(500);
     for (const delta of deltas) {
       await ctx.db.delete(delta._id);
     }
