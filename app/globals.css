@@ -1,129 +1,244 @@
 @import "tailwindcss";
+@import "dockview/dist/styles/dockview.css";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
-@theme inline {
-    --font-heading: var(--font-sans);
-    --font-sans: var(--font-sans);
-    --color-sidebar-ring: var(--sidebar-ring);
-    --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --color-sidebar-accent: var(--sidebar-accent);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar: var(--sidebar);
-    --color-chart-5: var(--chart-5);
-    --color-chart-4: var(--chart-4);
-    --color-chart-3: var(--chart-3);
-    --color-chart-2: var(--chart-2);
-    --color-chart-1: var(--chart-1);
-    --color-ring: var(--ring);
-    --color-input: var(--input);
-    --color-border: var(--border);
-    --color-destructive: var(--destructive);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-accent: var(--accent);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-muted: var(--muted);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-secondary: var(--secondary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-primary: var(--primary);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-popover: var(--popover);
-    --color-card-foreground: var(--card-foreground);
-    --color-card: var(--card);
-    --color-foreground: var(--foreground);
-    --color-background: var(--background);
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
-}
-
+/*
+ * BuildBrain - Linear App Design Tokens (Light Theme)
+ *
+ * Source: Linear.app live extracted tokens (2026-03-22)
+ * Color space: LCH with hue 282 (perceptual blue-gray)
+ * Font weight: 450 normal, 500 medium, 550 semibold
+ * Control radius: 8px
+ * Transition speed: 0.15s primary
+ */
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+  /* Linear LCH color system (light mode, hue 282) */
+  --linear-text-primary: lch(9.894% 0 282);
+  --linear-text-secondary: lch(19.788% 1.25 282);
+  --linear-text-tertiary: lch(39.576% 1.25 282);
+  --linear-text-quaternary: lch(65.3% 1.25 282);
+  --linear-bg-primary: lch(98.94% 0.5 282);
+  --linear-bg-secondary: lch(94.44% 0.5 282);
+  --linear-bg-tertiary: lch(92.94% 0.5 282);
+  --linear-bg-content: lch(95.94% 0.5 282);
+  --linear-bg-white: lch(100% 0.5 282);
+  --linear-border-primary: lch(90.84% 0 282);
+  --linear-border-secondary: lch(89.49% 0 282);
+  --linear-focus: lch(53% 52.26 286.91);
+
+  /* Named light/dark fallbacks */
+  --bg-sidebar-light: #f5f5f5;
+  --bg-base-color-light: #fcfcfd;
+  --bg-border-color-light: #e0e0e0;
+
+  /* Transition speeds */
+  --speed-quick: .1s;
+  --speed-regular: .15s;
+  --speed-medium: .25s;
+  --speed-slow: .35s;
+
+  /* Control dimensions */
+  --control-border-radius: 8px;
+  --focus-ring-width: 1px;
+
+  /* shadcn mappings to Linear LCH values */
+  --background: lch(95.94% 0.5 282);
+  --foreground: lch(9.894% 0 282);
+  --card: lch(100% 0.5 282);
+  --card-foreground: lch(9.894% 0 282);
+  --popover: lch(100% 0.5 282);
+  --popover-foreground: lch(9.894% 0 282);
+  --primary: lch(9.894% 0 282);
+  --primary-foreground: #FFFFFF;
+  --secondary: lch(92.94% 0.5 282);
+  --secondary-foreground: lch(9.894% 0 282);
+  --muted: lch(92.94% 0.5 282);
+  --muted-foreground: lch(39.576% 1.25 282);
+  --accent: lch(45% 70 286.91);
+  --accent-foreground: #FFFFFF;
+  --destructive: lch(40% 60 0);
+  --border: lch(90.84% 0 282);
+  --input: lch(90.84% 0 282);
+  --ring: lch(53% 52.26 286.91 / 0.3);
+  --radius: 0.5rem;
+
+  /* Sidebar */
+  --sidebar: #f5f5f5;
+  --sidebar-foreground: lch(9.894% 0 282);
+  --sidebar-primary: lch(9.894% 0 282);
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: lch(92.94% 0.5 282);
+  --sidebar-accent-foreground: lch(9.894% 0 282);
+  --sidebar-border: lch(90.84% 0 282);
+  --sidebar-ring: lch(53% 52.26 286.91 / 0.3);
+
+  /* Charts */
+  --chart-1: lch(53% 52.26 286.91);
+  --chart-2: lch(55% 60 145);
+  --chart-3: lch(70% 70 85);
+  --chart-4: lch(50% 60 25);
+  --chart-5: lch(50% 2 282);
 }
 
-.dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+/* BuildBrain Tailwind tokens */
+@theme {
+  --color-bg: lch(95.94% 0.5 282);
+  --color-bg-card: lch(100% 0.5 282);
+  --color-bg-muted: lch(92.94% 0.5 282);
+  --color-border-subtle: lch(94.04% 0.5 282);
+  --color-text-primary: lch(9.894% 0 282);
+  --color-text-secondary: lch(39.576% 1.25 282);
+  --color-text-muted: lch(65.3% 1.25 282);
+  --color-accent-hover: lch(40% 70 286.91);
+  --color-accent-muted: lch(53% 52.26 286.91 / 0.08);
+  --color-success: #008e08;
+  --color-error: lch(40% 60 0);
+  --color-warning: lch(70% 70 85);
+  --color-info: lch(53% 52.26 286.91);
+  --font-sans: "Inter", "Inter Variable", "SF Pro Display", -apple-system, system-ui, sans-serif;
+  --font-mono: "Berkeley Mono", "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* shadcn Tailwind v4 theme mappings */
+@theme inline {
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.75);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.5);
+  --radius-2xl: calc(var(--radius) * 2);
+  --radius-3xl: calc(var(--radius) * 2.5);
+  --radius-4xl: calc(var(--radius) * 3);
+}
+
+/*
+ * Dockview overrides (Linear styling)
+ */
+.dockview-buildbrain .dv-tabs-and-actions-container {
+  background-color: #ffffff !important;
+  height: 36px !important;
+  font-size: 13px !important;
+  font-weight: 450 !important;
+  border-bottom: 1px solid lch(90.84% 0 282) !important;
+  padding: 0 8px !important;
+  gap: 2px !important;
+}
+.dockview-buildbrain .dv-groupview {
+  background-color: #ffffff !important;
+}
+/* Active tab: Linear-style pill with subtle gray fill */
+.dockview-buildbrain .dv-tab {
+  border-radius: 9999px !important;
+  padding: 2px 12px !important;
+  margin: 4px 0 !important;
+  transition: background-color 0.15s, color 0.15s !important;
+}
+.dockview-buildbrain .dv-groupview.dv-active-group > .dv-tabs-and-actions-container .dv-tab.dv-active-tab {
+  background-color: lch(92.94% 0.5 282) !important;
+  color: lch(9.894% 0 282) !important;
+  font-weight: 500 !important;
+}
+.dockview-buildbrain .dv-groupview.dv-active-group > .dv-tabs-and-actions-container .dv-tab.dv-inactive-tab {
+  background-color: transparent !important;
+  color: lch(39.576% 1.25 282) !important;
+}
+.dockview-buildbrain .dv-tab.dv-inactive-tab:hover {
+  background-color: lch(95.94% 0.5 282) !important;
+  color: lch(19.788% 1.25 282) !important;
+}
+.dockview-buildbrain .dv-groupview.dv-inactive-group > .dv-tabs-and-actions-container .dv-tab.dv-active-tab {
+  background-color: lch(94.44% 0.5 282) !important;
+  color: lch(19.788% 1.25 282) !important;
+  font-weight: 500 !important;
+}
+.dockview-buildbrain .dv-groupview.dv-inactive-group > .dv-tabs-and-actions-container .dv-tab.dv-inactive-tab {
+  background-color: transparent !important;
+  color: lch(39.576% 1.25 282) !important;
+}
+.dockview-buildbrain .dv-tab .dv-default-tab-action:hover {
+  background-color: lch(90.84% 0 282) !important;
+  border-radius: 4px !important;
+}
+.dockview-buildbrain .dv-tab .dv-svg {
+  color: lch(39.576% 1.25 282) !important;
+}
+.dockview-buildbrain .dv-tab .dv-svg:hover {
+  color: lch(19.788% 1.25 282) !important;
+}
+.dockview-buildbrain .dv-resize-handle-border,
+.dockview-buildbrain .dv-split-view-container .dv-view:not(:first-child)::before {
+  background-color: lch(90.84% 0 282) !important;
+}
+.dockview-buildbrain .dv-drop-target-anchor {
+  background-color: lch(53% 52.26 286.91 / 0.06) !important;
+  border-color: lch(53% 52.26 286.91) !important;
+}
+.dockview-buildbrain .dv-tab:focus-within::after,
+.dockview-buildbrain .dv-tab:focus::after {
+  outline: none !important;
+}
+.dockview-buildbrain .dv-sash {
+  background-color: transparent !important;
+}
+.dockview-buildbrain .dv-sash:hover {
+  background-color: lch(53% 52.26 286.91) !important;
 }
 
 @layer base {
+  html, body {
+    background-color: lch(95.94% 0.5 282);
+    color: lch(9.894% 0 282);
+    font-family: "Inter", "Inter Variable", "SF Pro Display", -apple-system, system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 450;
+    line-height: 1.5;
+    letter-spacing: -0.1px;
+    -webkit-font-smoothing: antialiased;
+  }
   * {
     @apply border-border outline-ring/50;
-    }
+  }
   body {
     @apply bg-background text-foreground;
-    }
-  html {
-    @apply font-sans;
-    }
+  }
 }
+
+/* Linear-style scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: lch(85.44% 0 282); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: lch(78% 0 282); }

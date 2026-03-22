@@ -39,3 +39,11 @@ convex/_generated/
 tsconfig.tsbuildinfo
 next-env.d.ts
 skills-lock.json
+
+# Agent tool auto-generated skills (Convex AI files)
+.agent/skills/convex-*
+.claude/skills/convex-*
+.crush/skills/convex-*
+.factory/skills/convex-*
+.pi/skills/convex-*
+.agents/
