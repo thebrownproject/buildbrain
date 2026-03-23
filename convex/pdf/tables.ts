@@ -18,30 +18,19 @@
 //   7. Map text items into grid cells via position matching
 //   8. Return Table[] with headers (first row) and data rows
 
-import { getResolvedPDFJS } from "unpdf";
+// OPS constants — hardcoded because they are stable across all pdfjs versions.
+// This avoids async initialization and works with any pdfjs build.
+const OPS = {
+  constructPath: 91,
+  save: 10,
+  restore: 11,
+  transform: 12,
+  setLineWidth: 2,
+} as const;
 
-// Cache the OPS constants at module level for performance.
-// These are loaded lazily from unpdf's bundled pdfjs on first use.
-// Fallback hardcoded values are provided in case getResolvedPDFJS fails
-// (these OPS codes are stable across all pdfjs versions).
-let _OPS: Record<string, number> | null = null;
-async function getOPS(): Promise<Record<string, number>> {
-  if (!_OPS) {
-    try {
-      const pdfjs = await getResolvedPDFJS();
-      _OPS = pdfjs.OPS as Record<string, number>;
-    } catch {
-      // Hardcoded fallback — these OPS codes never change across pdfjs versions
-      _OPS = {
-        constructPath: 91,
-        save: 10,
-        restore: 11,
-        transform: 12,
-        setLineWidth: 2,
-      };
-    }
-  }
-  return _OPS;
+// Kept for API compat with code that calls await getOPS()
+async function getOPS(): Promise<typeof OPS> {
+  return OPS;
 }
 import type { PDFPageProxy, TextItem } from "./parser";
 import { extractPageTextItems, getPageDimensions } from "./parser";

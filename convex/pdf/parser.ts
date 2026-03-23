@@ -11,12 +11,11 @@
 //   - getPageDimensions: get page width, height, orientation
 //   - processAllPages: iterate all pages with a handler + cleanup
 //
-// NOTE: Uses unpdf instead of pdfjs-dist because pdfjs-dist v5.x throws
-// "s is not iterable" in Convex's Node.js runtime due to font loading /
-// worker issues. unpdf bundles a serverless-safe pdfjs build with workers
-// disabled and WASM stubbed.
+// Uses pdfjs-dist v4.x non-legacy build with explicit serverless options.
+// The v5 legacy build has core-js polyfill conflicts with Node.js 22.
 
-import { getDocumentProxy } from "unpdf";
+import { getDocument as _getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import path from "node:path";
 import type { PageData } from "./types";
 
 // pdfjs-dist types (TS declarations vary across versions, so we
@@ -55,13 +54,18 @@ export interface PDFDocumentProxy {
 /**
  * Load a PDF document from raw binary data.
  *
- * Uses unpdf's getDocumentProxy which automatically applies serverless-safe
- * options (isEvalSupported: false, useSystemFonts: true, workers disabled).
- *
+ * Uses pdfjs-dist v4 non-legacy build with serverless-safe options.
  * The caller is responsible for calling doc.destroy() when done.
  */
 export async function loadPdf(data: Uint8Array): Promise<PDFDocumentProxy> {
-  const doc = await getDocumentProxy(data);
+  const loadingTask = _getDocument({
+    data,
+    useSystemFonts: false,
+    disableFontFace: true,
+    isEvalSupported: false,
+    verbosity: 0,
+  } as any);
+  const doc = await loadingTask.promise;
   return doc as unknown as PDFDocumentProxy;
 }
 

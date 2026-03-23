@@ -2,7 +2,7 @@
 
 import { v } from "convex/values";
 import { internalAction } from "../_generated/server";
-import { getDocumentProxy, getResolvedPDFJS } from "unpdf";
+import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 
 /**
  * Spike test: validate unpdf works inside a Convex Node.js action.
@@ -28,9 +28,15 @@ export const extractPdfData = internalAction({
     // 3. Load PDF document
     let doc;
     try {
-      doc = await getDocumentProxy(data);
-      const pdfjs = await getResolvedPDFJS();
-      const OPS = pdfjs.OPS as Record<string, number>;
+      const loadingTask = getDocument({
+        data,
+        useSystemFonts: false,
+        disableFontFace: true,
+        isEvalSupported: false,
+        verbosity: 0,
+      } as any);
+      doc = await loadingTask.promise;
+      const OPS = { constructPath: 91, save: 10, restore: 11, transform: 12 };
       const pageCount = doc.numPages;
 
       // 4. Process first 3 pages (or fewer if document is shorter)
