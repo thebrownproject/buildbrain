@@ -9,8 +9,8 @@
  *   import { queryIfcElementsTool, crossValidateTool, ... } from "../tools";
  */
 
-export { queryIfcElementsTool } from "./ifc-query";
-export { queryScheduleRowsTool, getDrawingRegisterTool } from "./pdf-query";
-export { crossValidateTool } from "./cross-validate";
+export { queryIfcElementsTool } from "./ifcQuery";
+export { queryScheduleRowsTool, getDrawingRegisterTool } from "./pdfQuery";
+export { crossValidateTool } from "./crossValidate";
 export { searchPagesTool } from "./search";
-export { extractIfcElementsTool } from "./ifc-extract";
+export { extractIfcElementsTool } from "./ifcExtract";
