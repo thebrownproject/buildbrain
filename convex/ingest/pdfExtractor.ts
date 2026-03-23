@@ -185,7 +185,7 @@ export const extract = internalAction({
       doc = null;
 
       // Update manifest with schedule details
-      const currentFile = await ctx.runMutation(
+      const currentFile = await ctx.runQuery(
         internal.ingest.pipeline.getFile,
         { fileId: args.fileId }
       );
@@ -213,15 +213,6 @@ export const extract = internalAction({
         });
       }
     } catch (error) {
-      // Clean up on error
-      if (doc) {
-        try {
-          await doc.destroy();
-        } catch {
-          // Ignore destroy errors during cleanup
-        }
-      }
-
       const errorMessage =
         error instanceof Error ? error.message : String(error);
 
@@ -230,6 +221,12 @@ export const extract = internalAction({
         status: "failed",
         error: `PDF extraction failed: ${errorMessage}`,
       });
+
+      throw error;
+    } finally {
+      if (doc) {
+        try { await doc.destroy(); } catch { /* ignore cleanup errors */ }
+      }
     }
   },
 });

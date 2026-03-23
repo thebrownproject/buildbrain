@@ -136,15 +136,6 @@ export const scan = internalAction({
         { fileId: args.fileId, projectId: args.projectId }
       );
     } catch (error) {
-      // Clean up on error
-      if (doc) {
-        try {
-          await doc.destroy();
-        } catch {
-          // Ignore destroy errors during cleanup
-        }
-      }
-
       const errorMessage =
         error instanceof Error ? error.message : String(error);
 
@@ -153,6 +144,12 @@ export const scan = internalAction({
         status: "failed",
         error: `PDF scan failed: ${errorMessage}`,
       });
+
+      throw error;
+    } finally {
+      if (doc) {
+        try { await doc.destroy(); } catch { /* ignore cleanup errors */ }
+      }
     }
   },
 });

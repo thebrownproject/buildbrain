@@ -90,7 +90,6 @@ export interface IFCManifest {
   fileSizeMb: number;
   storeys: string[];
   elementCounts: Record<string, number>;
-  typeCountsByElement: Record<string, number>;
   psetCoverage: number;
   qtoCoverage: number;
   parseTimeMs: number;

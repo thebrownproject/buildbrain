@@ -67,7 +67,6 @@ export const scan = internalAction({
 
       // Count elements by type
       const elementCounts: Record<string, number> = {};
-      const typeCountsByElement: Record<string, number> = {};
 
       for (const typeName of EXTRACTABLE_ELEMENT_TYPES) {
         const typeConstant = getTypeConstant(typeName);
@@ -90,7 +89,6 @@ export const scan = internalAction({
         fileSizeMb: Math.round((file.sizeBytes / (1024 * 1024)) * 100) / 100,
         storeys,
         elementCounts,
-        typeCountsByElement,
         psetCoverage: 0, // Will be computed during Phase 1
         qtoCoverage: 0,  // Will be computed during Phase 1
         parseTimeMs,
@@ -123,11 +121,6 @@ export const scan = internalAction({
         { fileId: args.fileId, projectId: args.projectId }
       );
     } catch (error) {
-      // Clean up on error
-      if (ifcApi && modelId !== null) {
-        closeModel(ifcApi, modelId);
-      }
-
       const errorMessage =
         error instanceof Error ? error.message : String(error);
 
@@ -136,6 +129,12 @@ export const scan = internalAction({
         status: "failed",
         error: `IFC scan failed: ${errorMessage}`,
       });
+
+      throw error;
+    } finally {
+      if (ifcApi && modelId !== null) {
+        try { closeModel(ifcApi, modelId); } catch { /* ignore cleanup errors */ }
+      }
     }
   },
 });

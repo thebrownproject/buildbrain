@@ -203,7 +203,7 @@ export const extract = internalAction({
           : 0;
 
       // Update manifest with coverage stats
-      const currentFile = await ctx.runMutation(
+      const currentFile = await ctx.runQuery(
         internal.ingest.pipeline.getFile,
         { fileId: args.fileId }
       );
@@ -220,11 +220,6 @@ export const extract = internalAction({
         manifest: updatedManifest,
       });
     } catch (error) {
-      // Clean up on error
-      if (ifcApi && modelId !== null) {
-        closeModel(ifcApi, modelId);
-      }
-
       const errorMessage =
         error instanceof Error ? error.message : String(error);
 
@@ -233,6 +228,12 @@ export const extract = internalAction({
         status: "failed",
         error: `IFC extraction failed: ${errorMessage}`,
       });
+
+      throw error;
+    } finally {
+      if (ifcApi && modelId !== null) {
+        try { closeModel(ifcApi, modelId); } catch { /* ignore cleanup errors */ }
+      }
     }
   },
 });
