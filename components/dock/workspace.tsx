@@ -17,7 +17,7 @@ import {
 } from "@/lib/dock/workspace-helpers";
 
 const dockComponents = {
-  chat: (_props: IDockviewPanelProps) => <AIChat />,
+  chat: (_props: IDockviewPanelProps) => <AIChat threadId={null} />,
   ifc: (_props: IDockviewPanelProps) => <IFCViewer />,
   pdf: (_props: IDockviewPanelProps) => <PDFViewer />,
   workbench: (_props: IDockviewPanelProps) => <DataPanel />,

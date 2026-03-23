@@ -7,37 +7,34 @@ import {
   IconMicrophone,
   IconVolume,
   IconPlayerStop,
+  IconLoader2,
+  IconCheck,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useThreadMessages, useSendMessage } from "@/hooks/use-convex-data";
 
-type Message = {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
-  extractedData?: boolean;
-};
+/**
+ * AIChat panel — wired to Convex Agent via useThreadMessages and useSendMessage.
+ *
+ * Props:
+ * - threadId: the agent thread ID (from projectThreads). When null, shows empty state.
+ *
+ * Messages come from @convex-dev/agent's UIMessage format with typed `parts[]`.
+ * Streaming messages have status "streaming" and their text parts update in real-time.
+ * Tool calls appear as parts with type "tool-invocation".
+ */
 
-const INITIAL_MESSAGES: Message[] = [
-  { id: "1", role: "assistant", content: "I've loaded **clinic-project.ifc** with 847 elements across 2 storeys. What would you like to know about this model?", timestamp: new Date(Date.now() - 120000) },
-  { id: "2", role: "user", content: "Show me all fire-rated doors", timestamp: new Date(Date.now() - 90000) },
-  { id: "3", role: "assistant", content: "Found **12 fire-rated doors** across both levels. 8 on Ground Floor (FRL-60) and 4 on Level 1 (FRL-30). I've sent the full breakdown to the data panel.", timestamp: new Date(Date.now() - 60000), extractedData: true },
-  { id: "4", role: "user", content: "What about the windows on level 2? Any missing thermal data?", timestamp: new Date(Date.now() - 30000) },
-  { id: "5", role: "assistant", content: "Level 2 has **44 windows** (335.9 m\u00b2 total). All are external, mostly fixed type 1220x1500mm.\n\n**Issue:** No U-Value or acoustic ratings are present on any window. The fire rating field contains placeholder values only. This should be flagged for the design team.", timestamp: new Date(Date.now() - 10000), extractedData: true },
-];
-
-function formatTime(ts: Date) {
-  return ts.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
-
-export function AIChat() {
-  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
+export function AIChat({ threadId }: { threadId: string | null }) {
+  const { messages, status, loadMore } = useThreadMessages(threadId);
+  const sendMessage = useSendMessage();
   const [inputValue, setInputValue] = useState("");
-  const [isStreaming, setIsStreaming] = useState(false);
   const [inputActive, setInputActive] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Check if any message is currently streaming
+  const isStreaming = messages?.some((msg) => msg.status === "streaming") ?? false;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -45,15 +42,10 @@ export function AIChat() {
 
   const handleSend = useCallback(() => {
     const text = inputValue.trim();
-    if (!text) return;
-    setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "user", content: text, timestamp: new Date() }]);
+    if (!text || !threadId) return;
+    sendMessage({ threadId, prompt: text });
     setInputValue("");
-    setIsStreaming(true);
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "assistant", content: "Processing your request against the IFC model. This is a prototype -- in production, BuildBrain's extraction tools would handle this query.", timestamp: new Date() }]);
-      setIsStreaming(false);
-    }, 1500);
-  }, [inputValue]);
+  }, [inputValue, threadId, sendMessage]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -76,16 +68,23 @@ export function AIChat() {
       {/* Sub-bar */}
       <div className="flex h-[36px] shrink-0 items-center justify-between px-4">
         <span className="text-[13px] font-medium text-text-secondary">Chat</span>
-        <span className="text-[12px] text-text-muted">clinic-project.ifc</span>
+        {isStreaming && (
+          <span className="text-[12px] text-accent">Streaming...</span>
+        )}
       </div>
 
       {/* Messages */}
       <ScrollArea className="flex-1">
         <div className="flex flex-col gap-4 p-5 pb-4">
-          {messages.map((msg) => (
+          {!threadId && (
+            <div className="flex items-center justify-center py-12 text-[14px] text-text-muted">
+              No active thread. Create or select a thread to start chatting.
+            </div>
+          )}
+          {messages?.map((msg) => (
             <MessageBubble key={msg.id} message={msg} />
           ))}
-          {isStreaming && messages[messages.length - 1]?.role !== "assistant" && (
+          {isStreaming && messages?.[messages.length - 1]?.role !== "assistant" && (
             <TypingIndicator />
           )}
           <div ref={bottomRef} />
@@ -119,7 +118,8 @@ export function AIChat() {
                   onKeyDown={handleKeyDown}
                   onBlur={handleBlur}
                   rows={1}
-                  className="w-full max-h-[120px] resize-none bg-transparent text-[15px] leading-snug text-text-primary outline-none [field-sizing:content] placeholder:text-text-muted"
+                  disabled={!threadId}
+                  className="w-full max-h-[120px] resize-none bg-transparent text-[15px] leading-snug text-text-primary outline-none [field-sizing:content] placeholder:text-text-muted disabled:opacity-50"
                 />
               </div>
             </div>
@@ -149,7 +149,7 @@ export function AIChat() {
               icon={IconArrowUp}
               label="Send message"
               onClick={handleSend}
-              variant={inputValue.trim() ? "active" : "muted"}
+              variant={inputValue.trim() && threadId ? "active" : "muted"}
             />
           </div>
         </div>
@@ -186,28 +186,90 @@ function ChatBarButton({ icon: Icon, label, onClick, variant = "ghost" }: {
   );
 }
 
-function MessageBubble({ message }: { message: Message }) {
+/**
+ * UIMessage from @convex-dev/agent has:
+ * - id: string
+ * - role: "user" | "assistant"
+ * - status: "pending" | "streaming" | "complete" | "error"
+ * - parts: Array<{ type: "text", text: string } | { type: "tool-invocation", toolInvocation: {...} } | ...>
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function MessageBubble({ message }: { message: any }) {
   const isUser = message.role === "user";
+  const isMessageStreaming = message.status === "streaming";
+
+  // Extract text content from parts
+  const textContent = message.parts
+    ?.filter((part: { type: string }) => part.type === "text")
+    .map((part: { text: string }) => part.text)
+    .join("") ?? "";
+
+  // Extract tool invocations from parts
+  const toolParts = message.parts?.filter(
+    (part: { type: string }) => part.type === "tool-invocation"
+  ) ?? [];
 
   return (
     <div className={cn("flex flex-col", isUser ? "items-end" : "items-start")}>
       {isUser ? (
         <div className="max-w-[85%] rounded-2xl rounded-tr-sm border border-border bg-bg-muted px-4 py-2.5 text-[14px] leading-relaxed text-text-primary">
-          <p className="whitespace-pre-wrap">{message.content}</p>
+          <p className="whitespace-pre-wrap">{textContent}</p>
         </div>
       ) : (
         <div className="w-full text-[14px] leading-[1.6] text-text-primary">
-          {message.extractedData && (
-            <span className="mb-1.5 inline-block rounded-full bg-accent-muted px-2.5 py-0.5 text-[12px] font-medium text-accent">
-              Data extracted
-            </span>
+          {/* Tool call indicators */}
+          {toolParts.length > 0 && (
+            <div className="mb-2 flex flex-col gap-1.5">
+              {toolParts.map((part: { toolInvocation: { toolCallId: string; toolName: string; state: string } }, i: number) => (
+                <ToolCallIndicator key={part.toolInvocation.toolCallId ?? i} toolInvocation={part.toolInvocation} />
+              ))}
+            </div>
           )}
-          <div className="[&_strong]:font-semibold">
-            <MessageContent content={message.content} />
-          </div>
+
+          {/* Text content */}
+          {textContent && (
+            <div className={cn("[&_strong]:font-semibold", isMessageStreaming && "animate-pulse")}>
+              <MessageContent content={textContent} />
+            </div>
+          )}
+
+          {/* Streaming cursor */}
+          {isMessageStreaming && !textContent && (
+            <TypingIndicator />
+          )}
         </div>
       )}
-      <span className="mt-1.5 px-1 text-[11px] text-text-muted">{formatTime(message.timestamp)}</span>
+    </div>
+  );
+}
+
+/** Shows tool call status: running spinner or complete checkmark */
+function ToolCallIndicator({ toolInvocation }: {
+  toolInvocation: { toolName: string; state: string };
+}) {
+  const isComplete = toolInvocation.state === "result";
+  const isError = toolInvocation.state === "error";
+
+  return (
+    <div className={cn(
+      "inline-flex items-center gap-2 rounded-full px-3 py-1 text-[12px] font-medium",
+      isComplete
+        ? "bg-accent-muted text-accent"
+        : isError
+          ? "bg-red-500/10 text-red-400"
+          : "bg-bg-muted text-text-secondary",
+    )}>
+      {isComplete ? (
+        <IconCheck className="h-3.5 w-3.5" />
+      ) : isError ? (
+        <span className="text-red-400">!</span>
+      ) : (
+        <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
+      )}
+      <span>{toolInvocation.toolName}</span>
+      <span className="text-text-muted">
+        {isComplete ? "Complete" : isError ? "Error" : "Running..."}
+      </span>
     </div>
   );
 }
