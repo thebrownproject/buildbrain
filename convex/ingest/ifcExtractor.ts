@@ -18,11 +18,9 @@ import {
 import { getPropertySets, getTypeProduct } from "../ifc/properties";
 import { getMaterialName } from "../ifc/materials";
 import { buildStoreyLookup } from "../ifc/spatial";
-import type { ElementData } from "../ifc/types";
+import { extractStringValue, type ElementData } from "../ifc/types";
 import type { Id } from "../_generated/dataModel";
-
-/** Maximum elements per batch insert mutation call. */
-const BATCH_SIZE = 50;
+import { BATCH_SIZE, formatError } from "./helpers";
 
 /**
  * Display name mapping for IFC types.
@@ -220,13 +218,10 @@ export const extract = internalAction({
         manifest: updatedManifest,
       });
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-
       await ctx.runMutation(internal.ingest.pipeline.updateExtractionStatus, {
         fileId: args.fileId,
         status: "failed",
-        error: `IFC extraction failed: ${errorMessage}`,
+        error: formatError(error, "IFC extraction failed"),
       });
 
       throw error;
@@ -250,31 +245,20 @@ async function extractSingleElement(
   elementType: string,
   storeyLookup: Map<number, string>
 ): Promise<ElementData> {
-  // Get basic properties
+  // Run all 4 independent property lookups in parallel
+  const [basicProps, { psets, qtos }, { typeName }, material] = await Promise.all([
+    ifcApi.properties.getItemProperties(modelId, expressId, false).catch(() => null),
+    getPropertySets(ifcApi, modelId, expressId),
+    getTypeProduct(ifcApi, modelId, expressId),
+    getMaterialName(ifcApi, modelId, expressId),
+  ]);
+
   let guid = "";
   let name: string | null = null;
-  try {
-    const itemProps = await ifcApi.properties.getItemProperties(
-      modelId,
-      expressId,
-      false
-    );
-    if (itemProps) {
-      guid = extractStringValue(itemProps.GlobalId) ?? "";
-      name = extractStringValue(itemProps.Name);
-    }
-  } catch {
-    // Property lookup can fail for malformed elements
+  if (basicProps) {
+    guid = extractStringValue(basicProps.GlobalId) ?? "";
+    name = extractStringValue(basicProps.Name);
   }
-
-  // Get property sets and quantities
-  const { psets, qtos } = await getPropertySets(ifcApi, modelId, expressId);
-
-  // Get type product name
-  const { typeName } = await getTypeProduct(ifcApi, modelId, expressId);
-
-  // Get material name
-  const material = await getMaterialName(ifcApi, modelId, expressId);
 
   // Get storey from lookup
   const storey = storeyLookup.get(expressId) ?? null;
@@ -372,15 +356,4 @@ function buildColumnOrder(elementType: string): string[] {
   }
 }
 
-/**
- * Extract a string value from an IFC property wrapper.
- */
-function extractStringValue(val: unknown): string | null {
-  if (val === null || val === undefined) return null;
-  if (typeof val === "string") return val;
-  if (typeof val === "object" && val !== null && "value" in val) {
-    const v = (val as Record<string, unknown>).value;
-    return typeof v === "string" ? v : v !== null && v !== undefined ? String(v) : null;
-  }
-  return null;
-}
+// extractStringValue imported from ../ifc/types

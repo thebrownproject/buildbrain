@@ -21,12 +21,12 @@ import { useThreadMessages, useSendMessage } from "@/hooks/use-convex-data";
  * - threadId: the agent thread ID (from projectThreads). When null, shows empty state.
  *
  * Messages come from @convex-dev/agent's UIMessage format with typed `parts[]`.
- * Streaming messages have status "streaming" and their text parts update in real-time.
+ * Streaming results have status "streaming" and their text parts update in real-time.
  * Tool calls appear as parts with type "tool-invocation".
  */
 
 export function AIChat({ threadId }: { threadId: string | null }) {
-  const { messages, status, loadMore } = useThreadMessages(threadId);
+  const { results, status, loadMore } = useThreadMessages(threadId);
   const sendMessage = useSendMessage();
   const [inputValue, setInputValue] = useState("");
   const [inputActive, setInputActive] = useState(false);
@@ -34,11 +34,11 @@ export function AIChat({ threadId }: { threadId: string | null }) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Check if any message is currently streaming
-  const isStreaming = messages?.some((msg) => msg.status === "streaming") ?? false;
+  const isStreaming = results?.some((msg) => msg.status === "streaming") ?? false;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isStreaming]);
+  }, [results, isStreaming]);
 
   const handleSend = useCallback(() => {
     const text = inputValue.trim();
@@ -81,10 +81,10 @@ export function AIChat({ threadId }: { threadId: string | null }) {
               No active thread. Create or select a thread to start chatting.
             </div>
           )}
-          {messages?.map((msg) => (
+          {results?.map((msg) => (
             <MessageBubble key={msg.id} message={msg} />
           ))}
-          {isStreaming && messages?.[messages.length - 1]?.role !== "assistant" && (
+          {isStreaming && results?.[results.length - 1]?.role !== "assistant" && (
             <TypingIndicator />
           )}
           <div ref={bottomRef} />

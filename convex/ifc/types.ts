@@ -193,3 +193,21 @@ export const QTO_PREFERENCES: Record<string, QtoPreference> = {
     volumeProp: null,
   },
 };
+
+// ── Shared Value Extraction ───────────────────────────────────────────────
+
+/**
+ * Extract a string value from an IFC property value wrapper.
+ * Handles both { value: "string" } and raw string formats.
+ *
+ * Shared across parser, properties, spatial, materials, and ifcExtractor.
+ */
+export function extractStringValue(val: unknown): string | null {
+  if (val === null || val === undefined) return null;
+  if (typeof val === "string") return val || null;
+  if (typeof val === "object" && val !== null && "value" in val) {
+    const v = (val as { value: unknown }).value;
+    return typeof v === "string" ? v || null : v !== null && v !== undefined ? String(v) : null;
+  }
+  return String(val);
+}

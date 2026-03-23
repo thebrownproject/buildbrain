@@ -15,7 +15,6 @@
 // The v5 legacy build has core-js polyfill conflicts with Node.js 22.
 
 import { getDocument as _getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
-import path from "node:path";
 import type { PageData } from "./types";
 
 // pdfjs-dist types (TS declarations vary across versions, so we

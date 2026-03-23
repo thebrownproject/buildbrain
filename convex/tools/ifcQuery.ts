@@ -13,9 +13,7 @@ import { createTool } from "@convex-dev/agent";
 import { z } from "zod";
 import type { GenericId } from "convex/values";
 import { internal } from "../_generated/api";
-
-// Maximum payload size for LLM context (bytes)
-const MAX_RESULT_SIZE = 50_000;
+import { MAX_RESULT_SIZE } from "./constants";
 const MAX_ELEMENTS = 50;
 
 /**

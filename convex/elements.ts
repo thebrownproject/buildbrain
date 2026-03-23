@@ -1,17 +1,15 @@
 import { v } from "convex/values";
 import { internalMutation, query } from "./_generated/server";
-import { paginationOptsValidator } from "convex/server";
 
 export const listByGroup = query({
   args: {
     groupId: v.id("elementGroups"),
-    paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
     return await ctx.db
       .query("elements")
       .withIndex("by_group", (q) => q.eq("groupId", args.groupId))
-      .paginate(args.paginationOpts);
+      .take(200);
   },
 });
 

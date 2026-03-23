@@ -7,6 +7,7 @@
 
 import * as WebIFC from "web-ifc";
 import { getElementsByType } from "./parser";
+import { extractStringValue } from "./types";
 
 /**
  * Node in the IFC spatial structure tree.
@@ -116,7 +117,7 @@ export async function getStoreyName(
       );
       if (!storeyProps) continue;
 
-      return extractNameValue(storeyProps.Name);
+      return extractStringValue(storeyProps.Name);
     }
   } catch {
     // Containment traversal can fail
@@ -172,7 +173,7 @@ export async function buildStoreyLookup(
           false
         );
         storeyName = storeyProps
-          ? extractNameValue(storeyProps.Name) ?? "Unknown Storey"
+          ? extractStringValue(storeyProps.Name) ?? "Unknown Storey"
           : "Unknown Storey";
         storeyNameCache.set(structureId, storeyName);
       }
@@ -202,7 +203,7 @@ export async function buildStoreyLookup(
  */
 function walkForStoreys(node: SpatialNode, storeys: string[]): void {
   if (node.type === "IFCBUILDINGSTOREY") {
-    const name = extractNameValue(node.Name);
+    const name = extractStringValue(node.Name);
     if (name) {
       storeys.push(name);
     }
@@ -229,16 +230,4 @@ function extractExpressId(val: unknown): number | null {
   return null;
 }
 
-/**
- * Extract a string name from an IFC Name property.
- * Handles both { value: "string" } wrappers and raw strings.
- */
-function extractNameValue(val: unknown): string | null {
-  if (val === null || val === undefined) return null;
-  if (typeof val === "string") return val || null;
-  if (typeof val === "object" && val !== null && "value" in val) {
-    const v = (val as Record<string, unknown>).value;
-    return typeof v === "string" && v ? v : null;
-  }
-  return null;
-}
+// extractStringValue imported from ./types

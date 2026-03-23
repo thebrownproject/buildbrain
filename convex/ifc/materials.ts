@@ -6,6 +6,7 @@
 // No Convex actions/mutations — pure library functions.
 
 import * as WebIFC from "web-ifc";
+import { extractStringValue } from "./types";
 
 // web-ifc type constants for material types
 const IFCMATERIAL = 1838606355;
@@ -265,18 +266,11 @@ async function getMaterialFromType(
 
 /**
  * Safely get a string property from an IFC object.
- * Handles both raw strings and { value: "string" } wrappers.
+ * Delegates to the shared extractStringValue helper.
  */
 function getStringProp(
   obj: Record<string, unknown>,
   key: string
 ): string | null {
-  const val = obj[key];
-  if (val === null || val === undefined) return null;
-  if (typeof val === "string") return val || null;
-  if (typeof val === "object" && val !== null && "value" in val) {
-    const v = (val as Record<string, unknown>).value;
-    return typeof v === "string" && v ? v : null;
-  }
-  return null;
+  return extractStringValue(obj[key]);
 }

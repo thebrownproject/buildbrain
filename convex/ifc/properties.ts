@@ -6,7 +6,7 @@
 // No Convex actions/mutations — pure library functions.
 
 import * as WebIFC from "web-ifc";
-import type { PropertySets } from "./types";
+import { extractStringValue, type PropertySets } from "./types";
 
 /**
  * Result of property set extraction, separated into psets and qtos.
@@ -220,19 +220,4 @@ function unwrapValue(val: unknown): unknown {
   return val;
 }
 
-/**
- * Extract a string value from an IFC name/label wrapper.
- */
-function extractStringValue(val: unknown): string | null {
-  if (val === null || val === undefined) return null;
-  if (typeof val === "string") return val;
-  if (typeof val === "object" && val !== null && "value" in val) {
-    const v = (val as Record<string, unknown>).value;
-    return typeof v === "string"
-      ? v
-      : v !== null && v !== undefined
-        ? String(v)
-        : null;
-  }
-  return null;
-}
+// extractStringValue imported from ./types

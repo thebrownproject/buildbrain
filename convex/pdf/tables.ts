@@ -28,10 +28,6 @@ const OPS = {
   setLineWidth: 2,
 } as const;
 
-// Kept for API compat with code that calls await getOPS()
-async function getOPS(): Promise<typeof OPS> {
-  return OPS;
-}
 import type { PDFPageProxy, TextItem } from "./parser";
 import { extractPageTextItems, getPageDimensions } from "./parser";
 import type { Edge, Table } from "./types";
@@ -123,7 +119,6 @@ function transformPoint(
  * All coordinates are transformed to page space using the accumulated CTM.
  */
 export async function extractEdges(page: PDFPageProxy): Promise<Edge[]> {
-  const OPS = await getOPS();
   const opList = await page.getOperatorList();
   const edges: Edge[] = [];
 
@@ -609,7 +604,7 @@ export async function extractTables(page: PDFPageProxy): Promise<Table[]> {
   if (!grid) return [];
 
   // Step 6: Get text items and map to cells
-  const { width: _w, height: pageHeight } = getPageDimensions(page);
+  const { height: pageHeight } = getPageDimensions(page);
   const textItems = await extractPageTextItems(page);
   mapTextToCells(textItems, grid, pageHeight);
 
@@ -684,7 +679,6 @@ export async function pageHasTable(
   page: PDFPageProxy,
   threshold: number = 20
 ): Promise<boolean> {
-  const OPS = await getOPS();
   const opList = await page.getOperatorList();
   let edgeCount = 0;
 

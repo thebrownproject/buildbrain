@@ -10,7 +10,6 @@ import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
 import {
   loadPdf,
-  extractPageText,
 } from "../pdf/parser";
 import type { PDFDocumentProxy } from "../pdf/parser";
 import { extractTables } from "../pdf/tables";
@@ -20,9 +19,7 @@ import {
   extractScheduleRows,
 } from "../pdf/schedules";
 import type { Schedule } from "../pdf/types";
-
-/** Maximum schedule rows per batch insert mutation call. */
-const BATCH_SIZE = 50;
+import { BATCH_SIZE, formatError } from "./helpers";
 
 /**
  * Phase 1: PDF table extraction.
@@ -97,8 +94,8 @@ export const extract = internalAction({
           const tables = await extractTables(page);
           if (tables.length === 0) continue;
 
-          // Get page text for title matching
-          const pageText = await extractPageText(page);
+          // Use cached text from Phase 0 instead of re-extracting
+          const pageText = pageRecord.text ?? "";
 
           // Classify tables
           const classified = classifyTables(
@@ -213,13 +210,10 @@ export const extract = internalAction({
         });
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-
       await ctx.runMutation(internal.ingest.pipeline.updateExtractionStatus, {
         fileId: args.fileId,
         status: "failed",
-        error: `PDF extraction failed: ${errorMessage}`,
+        error: formatError(error, "PDF extraction failed"),
       });
 
       throw error;

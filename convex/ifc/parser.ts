@@ -5,7 +5,7 @@
 // No Convex actions/mutations — pure library functions.
 
 import * as WebIFC from "web-ifc";
-import { TYPE_SHORTHAND } from "./types";
+import { TYPE_SHORTHAND, extractStringValue } from "./types";
 
 // ── IFC class name to web-ifc constant mapping ─────────────────────────────
 // Maps "IfcDoor" string to the numeric IFCDOOR constant.
@@ -204,18 +204,4 @@ export function getClassName(typeConstant: number): string | null {
   return null;
 }
 
-// ── Internal Helpers ────────────────────────────────────────────────────────
-
-/**
- * Extract a string value from an IFC property value wrapper.
- * Handles both { value: "string" } and raw string formats.
- */
-function extractStringValue(val: unknown): string | null {
-  if (val === null || val === undefined) return null;
-  if (typeof val === "string") return val;
-  if (typeof val === "object" && val !== null && "value" in val) {
-    const v = (val as Record<string, unknown>).value;
-    return typeof v === "string" ? v : v !== null && v !== undefined ? String(v) : null;
-  }
-  return null;
-}
+// extractStringValue imported from ./types
