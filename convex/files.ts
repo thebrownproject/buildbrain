@@ -103,6 +103,14 @@ export const updatePdfMeta = internalMutation({
   },
 });
 
+// Internal query: list all files (used by spike tests and agent VM)
+export const listAllInternal = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("files").take(50);
+  },
+});
+
 export const getDownloadUrl = internalQuery({
   args: { fileId: v.id("files") },
   handler: async (ctx, args) => {
