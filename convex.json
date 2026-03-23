@@ -1,0 +1,6 @@
+{
+  "node": {
+    "externalPackages": ["web-ifc", "pdfjs-dist"],
+    "nodeVersion": "22"
+  }
+}
