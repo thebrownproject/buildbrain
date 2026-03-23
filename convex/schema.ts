@@ -58,6 +58,10 @@ export default defineSchema({
         })
       )
     ),
+    // V3: Document intelligence pipeline fields
+    extractionStatus: v.optional(v.string()), // pending|scanning|scanned|extracting|extracted|indexing|ready|failed
+    manifest: v.optional(v.any()),            // JSON object with file manifest data (element counts, drawing register, etc.)
+    extractionError: v.optional(v.string()),  // error message if extraction failed
   })
     .index("by_project", ["projectId"])
     .index("by_project_type", ["projectId", "type"]),
@@ -260,4 +264,47 @@ export default defineSchema({
     .index("by_group", ["groupId"])
     .index("by_project", ["projectId"])
     .index("by_project_and_global_id", ["projectId", "globalId"]),
+
+  // ── V3: PDF Pages (document intelligence, Phase 0 output) ─
+  pdfPages: defineTable({
+    fileId: v.id("files"),
+    projectId: v.id("projects"),
+    pageNumber: v.number(),
+    text: v.string(),
+    classification: v.optional(v.string()),   // schedule|plan|notes|detail|cover|elevation|section
+    drawingNumber: v.optional(v.string()),    // "A5.01" from title block
+    drawingTitle: v.optional(v.string()),     // "Door Schedule Level 1"
+    hasTable: v.boolean(),
+    extractedAt: v.number(),
+  })
+    .index("by_file_page", ["fileId", "pageNumber"])
+    .index("by_project_classification", ["projectId", "classification"])
+    .searchIndex("search_text", {
+      searchField: "text",
+      filterFields: ["projectId", "fileId"],
+    }),
+
+  // ── V3: PDF Schedule Rows (document intelligence, Phase 1 output) ─
+  pdfScheduleRows: defineTable({
+    fileId: v.id("files"),
+    projectId: v.id("projects"),
+    scheduleType: v.string(),               // door_schedule|window_schedule|finish_schedule
+    mark: v.string(),                        // "D-01", "W-14" — the cross-validation join key
+    properties: v.any(),                     // { Size: "820x2040", FireRating: "FRL-30", ... }
+    sourcePages: v.array(v.number()),
+    extractedAt: v.number(),
+  })
+    .index("by_project_schedule", ["projectId", "scheduleType"])
+    .index("by_project_mark", ["projectId", "mark"])
+    .index("by_file", ["fileId"]),
+
+  // ── V3: Project Threads (link Convex Agent threads to projects) ─
+  projectThreads: defineTable({
+    projectId: v.id("projects"),
+    agentThreadId: v.string(),
+    userId: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_project_user", ["projectId", "userId"]),
 });
