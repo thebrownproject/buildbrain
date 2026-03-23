@@ -2,10 +2,10 @@
 
 import { v } from "convex/values";
 import { internalAction } from "../_generated/server";
-import { getDocument, OPS } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { getDocumentProxy, getResolvedPDFJS } from "unpdf";
 
 /**
- * Spike test: validate pdfjs-dist works inside a Convex Node.js action.
+ * Spike test: validate unpdf works inside a Convex Node.js action.
  *
  * Tests text extraction via getTextContent() and operator list parsing
  * via getOperatorList() for line/rectangle detection in construction drawings.
@@ -28,7 +28,9 @@ export const extractPdfData = internalAction({
     // 3. Load PDF document
     let doc;
     try {
-      doc = await getDocument({ data }).promise;
+      doc = await getDocumentProxy(data);
+      const pdfjs = await getResolvedPDFJS();
+      const OPS = pdfjs.OPS as Record<string, number>;
       const pageCount = doc.numPages;
 
       // 4. Process first 3 pages (or fewer if document is shorter)

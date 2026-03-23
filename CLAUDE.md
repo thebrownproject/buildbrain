@@ -143,7 +143,7 @@ Key values: Inter Variable font, LCH color space (hue 282), font-weight 450 for 
 - **Backend:** Convex (real-time, file storage, agent orchestration)
 - **Agent:** @convex-dev/agent v0.6.x, AI SDK v6, Anthropic Claude, OpenAI embeddings
 - **IFC Parsing:** web-ifc (WASM, server-side in Convex actions)
-- **PDF Parsing:** pdfjs-dist (legacy build, server-side in Convex actions)
+- **PDF Parsing:** unpdf (serverless-optimized pdfjs wrapper, server-side in Convex actions)
 - **Auth:** Clerk (OIDC/JWT)
 - **Deployment:** Vercel (frontend), Convex cloud (backend)
 

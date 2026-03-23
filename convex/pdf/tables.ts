@@ -4,7 +4,7 @@
 // PDF Extraction Library — Grid-Based Table Detection
 // ============================================================
 //
-// Ported from pdf-table-extractor's algorithm onto modern pdfjs-dist v5.x.
+// Ported from pdf-table-extractor's algorithm using unpdf (serverless pdfjs).
 //
 // Construction schedules use visible grid lines (drawn as PDF path
 // operations). The algorithm:
@@ -18,7 +18,31 @@
 //   7. Map text items into grid cells via position matching
 //   8. Return Table[] with headers (first row) and data rows
 
-import { OPS } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { getResolvedPDFJS } from "unpdf";
+
+// Cache the OPS constants at module level for performance.
+// These are loaded lazily from unpdf's bundled pdfjs on first use.
+// Fallback hardcoded values are provided in case getResolvedPDFJS fails
+// (these OPS codes are stable across all pdfjs versions).
+let _OPS: Record<string, number> | null = null;
+async function getOPS(): Promise<Record<string, number>> {
+  if (!_OPS) {
+    try {
+      const pdfjs = await getResolvedPDFJS();
+      _OPS = pdfjs.OPS as Record<string, number>;
+    } catch {
+      // Hardcoded fallback — these OPS codes never change across pdfjs versions
+      _OPS = {
+        constructPath: 91,
+        save: 10,
+        restore: 11,
+        transform: 12,
+        setLineWidth: 2,
+      };
+    }
+  }
+  return _OPS;
+}
 import type { PDFPageProxy, TextItem } from "./parser";
 import { extractPageTextItems, getPageDimensions } from "./parser";
 import type { Edge, Table } from "./types";
@@ -110,6 +134,7 @@ function transformPoint(
  * All coordinates are transformed to page space using the accumulated CTM.
  */
 export async function extractEdges(page: PDFPageProxy): Promise<Edge[]> {
+  const OPS = await getOPS();
   const opList = await page.getOperatorList();
   const edges: Edge[] = [];
 
@@ -670,6 +695,7 @@ export async function pageHasTable(
   page: PDFPageProxy,
   threshold: number = 20
 ): Promise<boolean> {
+  const OPS = await getOPS();
   const opList = await page.getOperatorList();
   let edgeCount = 0;
 
