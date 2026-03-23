@@ -12,22 +12,30 @@ import {
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useThreadMessages, useSendMessage } from "@/hooks/use-convex-data";
+import { useThreadMessages, useSendMessage, useCreateThread } from "@/hooks/use-convex-data";
 
 /**
  * AIChat panel — wired to Convex Agent via useThreadMessages and useSendMessage.
  *
  * Props:
- * - threadId: the agent thread ID (from projectThreads). When null, shows empty state.
+ * - threadId: optional initial thread ID. If null, a new thread is created on first message.
+ * - projectId / userId: needed for auto-thread-creation.
  *
  * Messages come from @convex-dev/agent's UIMessage format with typed `parts[]`.
  * Streaming results have status "streaming" and their text parts update in real-time.
  * Tool calls appear as parts with type "tool-invocation".
  */
 
-export function AIChat({ threadId }: { threadId: string | null }) {
+export function AIChat({ threadId: initialThreadId, projectId, userId }: {
+  threadId: string | null;
+  projectId?: string;
+  userId?: string;
+}) {
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(initialThreadId);
+  const threadId = activeThreadId;
   const { results, status, loadMore } = useThreadMessages(threadId);
   const sendMessage = useSendMessage();
+  const createThread = useCreateThread();
   const [inputValue, setInputValue] = useState("");
   const [inputActive, setInputActive] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -40,12 +48,21 @@ export function AIChat({ threadId }: { threadId: string | null }) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [results, isStreaming]);
 
-  const handleSend = useCallback(() => {
+  const handleSend = useCallback(async () => {
     const text = inputValue.trim();
-    if (!text || !threadId) return;
-    sendMessage({ threadId, prompt: text });
+    if (!text) return;
+
+    let tid = threadId;
+    if (!tid && projectId && userId) {
+      const result = await createThread({ projectId: projectId as any, userId: userId as any });
+      tid = result.threadId;
+      setActiveThreadId(tid);
+    }
+    if (!tid) return;
+
+    sendMessage({ threadId: tid, prompt: text });
     setInputValue("");
-  }, [inputValue, threadId, sendMessage]);
+  }, [inputValue, threadId, projectId, userId, sendMessage, createThread]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -78,7 +95,7 @@ export function AIChat({ threadId }: { threadId: string | null }) {
         <div className="flex flex-col gap-4 p-5 pb-4">
           {!threadId && (
             <div className="flex items-center justify-center py-12 text-[14px] text-text-muted">
-              No active thread. Create or select a thread to start chatting.
+              Send a message to start a new conversation.
             </div>
           )}
           {results?.map((msg) => (
@@ -118,7 +135,7 @@ export function AIChat({ threadId }: { threadId: string | null }) {
                   onKeyDown={handleKeyDown}
                   onBlur={handleBlur}
                   rows={1}
-                  disabled={!threadId}
+                  disabled={!threadId && !projectId}
                   className="w-full max-h-[120px] resize-none bg-transparent text-[15px] leading-snug text-text-primary outline-none [field-sizing:content] placeholder:text-text-muted disabled:opacity-50"
                 />
               </div>
