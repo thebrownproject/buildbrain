@@ -148,13 +148,10 @@ export const getFile = internalQuery({
 export const getProjectThread = internalQuery({
   args: { agentThreadId: v.string() },
   handler: async (ctx, args) => {
-    // projectThreads doesn't have an index on agentThreadId,
-    // so we search by_project and filter. In practice, we need the projectId
-    // from the thread context. For now, scan a small number of rows.
-    // This is acceptable because projectThreads is a small table.
-    const threads = await ctx.db
+    const thread = await ctx.db
       .query("projectThreads")
-      .take(200);
-    return threads.find((t) => t.agentThreadId === args.agentThreadId) ?? null;
+      .withIndex("by_thread", (q) => q.eq("agentThreadId", args.agentThreadId))
+      .first();
+    return thread;
   },
 });

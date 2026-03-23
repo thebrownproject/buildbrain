@@ -17,6 +17,7 @@
 
 import { createTool } from "@convex-dev/agent";
 import { z } from "zod";
+import type { GenericId } from "convex/values";
 import { internal } from "../_generated/api";
 
 // Maximum elements in the per-element detail section
@@ -27,14 +28,18 @@ const MAX_RESULT_SIZE = 50_000;
 
 /**
  * Normalize a mark/tag for matching.
- * "D-01" -> "d01", "D.01" -> "d01", "W-14" -> "w14",
- * "101" -> "101", "D101" -> "d101"
+ * Strips known element type prefixes so "D-01" and "01" both normalize to "1".
+ * Preserves numeric-only marks like "101" (room numbers) unchanged.
  */
 function normalizeMark(mark: string): string {
-  return mark
-    .toLowerCase()
-    .replace(/[-_./\s]/g, "") // Strip separators
-    .replace(/^0+/, "") || "0"; // Strip leading zeros, keep at least "0"
+  let normalized = mark.trim().toLowerCase();
+  // Strip known element type prefixes: D-, W-, DR-, WN-, etc.
+  normalized = normalized.replace(/^(d|w|dr|wn|rm|door|window|room)[-._/\\]?\s*/i, "");
+  // Strip remaining separators
+  normalized = normalized.replace(/[-._/\\]/g, "");
+  // Strip leading zeros
+  normalized = normalized.replace(/^0+/, "") || "0";
+  return normalized;
 }
 
 // ── Property comparison ────────────────────────────────────────
@@ -208,7 +213,7 @@ export const crossValidateTool = createTool({
     const groups = await ctx.runQuery(
       internal.tools.queries.listElementGroups,
       {
-        projectId: input.projectId as never,
+        projectId: input.projectId as GenericId<"projects">,
         elementType: input.ifcType,
       }
     );
@@ -246,7 +251,7 @@ export const crossValidateTool = createTool({
     const scheduleRows = await ctx.runQuery(
       internal.tools.queries.listScheduleRows,
       {
-        projectId: input.projectId as never,
+        projectId: input.projectId as GenericId<"projects">,
         scheduleType: input.scheduleType,
         limit: 500,
       }

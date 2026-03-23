@@ -14,6 +14,7 @@
 
 import { createTool } from "@convex-dev/agent";
 import { z } from "zod";
+import type { GenericId } from "convex/values";
 import { internal } from "../_generated/api";
 
 export const extractIfcElementsTool = createTool({
@@ -40,7 +41,7 @@ export const extractIfcElementsTool = createTool({
     const groups = await ctx.runQuery(
       internal.tools.queries.listElementGroupsByFile,
       {
-        fileId: input.fileId as never,
+        fileId: input.fileId as GenericId<"files">,
         elementType: input.elementType,
       }
     );
@@ -60,7 +61,7 @@ export const extractIfcElementsTool = createTool({
 
     // 2. Verify the file exists and is an IFC file
     const file = await ctx.runQuery(internal.tools.queries.getFile, {
-      fileId: input.fileId as never,
+      fileId: input.fileId as GenericId<"files">,
     });
 
     if (!file) {

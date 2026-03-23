@@ -11,6 +11,7 @@
 
 import { createTool } from "@convex-dev/agent";
 import { z } from "zod";
+import type { GenericId } from "convex/values";
 import { internal } from "../_generated/api";
 
 // Maximum payload size for LLM context (bytes)
@@ -78,7 +79,7 @@ export const queryIfcElementsTool = createTool({
     const groups = await ctx.runQuery(
       internal.tools.queries.listElementGroups,
       {
-        projectId: input.projectId as never,
+        projectId: input.projectId as GenericId<"projects">,
         elementType: input.elementType,
       }
     );

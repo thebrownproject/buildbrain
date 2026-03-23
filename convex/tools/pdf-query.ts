@@ -12,6 +12,7 @@
 
 import { createTool } from "@convex-dev/agent";
 import { z } from "zod";
+import type { GenericId } from "convex/values";
 import { internal } from "../_generated/api";
 
 // ── queryScheduleRowsTool ──────────────────────────────────────
@@ -46,7 +47,7 @@ export const queryScheduleRowsTool = createTool({
     const rows = await ctx.runQuery(
       internal.tools.queries.listScheduleRows,
       {
-        projectId: input.projectId as never,
+        projectId: input.projectId as GenericId<"projects">,
         scheduleType: input.scheduleType,
         limit: limit * 2, // Fetch extra for filtering
       }
@@ -114,7 +115,7 @@ export const getDrawingRegisterTool = createTool({
     // 1. Query pages for this file
     const pages = await ctx.runQuery(
       internal.tools.queries.listPagesByFile,
-      { fileId: input.fileId as never }
+      { fileId: input.fileId as GenericId<"files"> }
     );
 
     if (pages.length === 0) {

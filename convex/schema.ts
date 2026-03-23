@@ -306,5 +306,6 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_project", ["projectId"])
-    .index("by_project_user", ["projectId", "userId"]),
+    .index("by_project_user", ["projectId", "userId"])
+    .index("by_thread", ["agentThreadId"]),
 });

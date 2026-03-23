@@ -11,6 +11,7 @@
 
 import { createTool } from "@convex-dev/agent";
 import { z } from "zod";
+import type { GenericId } from "convex/values";
 import { internal } from "../_generated/api";
 
 // Maximum text snippet length per page in results
@@ -49,8 +50,8 @@ export const searchPagesTool = createTool({
       internal.tools.queries.searchPages,
       {
         query: input.query,
-        projectId: input.projectId as never,
-        fileId: input.fileId as never | undefined,
+        projectId: input.projectId as GenericId<"projects">,
+        fileId: input.fileId as GenericId<"files"> | undefined,
         limit,
       }
     );
