@@ -114,6 +114,8 @@ export const TYPE_SHORTHAND: Record<string, string> = {
   proxy: "IfcBuildingElementProxy",
   space: "IfcSpace",
   storey: "IfcBuildingStorey",
+  floor: "IfcSlab",
+  room: "IfcSpace",
 };
 
 // ── QTO Preferences Map ─────────────────────────────────────────────────────
@@ -148,12 +150,12 @@ export const QTO_PREFERENCES: Record<string, QtoPreference> = {
   },
   IfcBeam: {
     qtoSetName: "Qto_BeamBaseQuantities",
-    areaProp: "NetSurfaceArea",
+    areaProp: "CrossSectionArea",
     volumeProp: "NetVolume",
   },
   IfcColumn: {
     qtoSetName: "Qto_ColumnBaseQuantities",
-    areaProp: "NetSurfaceArea",
+    areaProp: "CrossSectionArea",
     volumeProp: "NetVolume",
   },
   IfcRoof: {
