@@ -12,7 +12,7 @@ import { internal } from "../_generated/api";
  * Lists files in the "files" table, picks the first PDF, and runs
  * the spike extraction action against it.
  */
-export default action({
+export const run = action({
   args: {},
   handler: async (ctx) => {
     // 1. Query the files table for PDF files
