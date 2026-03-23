@@ -17,7 +17,7 @@ import { z } from "zod";
 import type { GenericId } from "convex/values";
 import { internal } from "../_generated/api";
 
-export const extractIfcElementsTool = createTool({
+export const extractIfcElementsTool: any = createTool({
   description:
     "Trigger on-demand IFC element extraction for a specific element type. " +
     "Use this ONLY if queryIfcElements returned no data and you need the data extracted. " +
@@ -36,9 +36,9 @@ export const extractIfcElementsTool = createTool({
         "IFC element type to extract, e.g. 'IfcDoor', 'IfcWall', 'IfcWindow'"
       ),
   }),
-  execute: async (ctx, input) => {
+  execute: async (ctx, input): Promise<string> => {
     // 1. Check if element group already exists for this file + type
-    const groups = await ctx.runQuery(
+    const groups: any[] = await ctx.runQuery(
       internal.tools.queries.listElementGroupsByFile,
       {
         fileId: input.fileId as GenericId<"files">,
@@ -60,7 +60,7 @@ export const extractIfcElementsTool = createTool({
     }
 
     // 2. Verify the file exists and is an IFC file
-    const file = await ctx.runQuery(internal.tools.queries.getFile, {
+    const file: any = await ctx.runQuery(internal.tools.queries.getFile, {
       fileId: input.fileId as GenericId<"files">,
     });
 

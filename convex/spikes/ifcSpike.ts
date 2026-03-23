@@ -95,7 +95,7 @@ export const run = internalAction({
 
       // The spatial structure is a tree; walk it to find storeys
       if (spatialStructure && typeof spatialStructure === "object") {
-        extractStoreys(spatialStructure as Record<string, unknown>);
+        extractStoreys(spatialStructure as unknown as Record<string, unknown>);
       }
       console.log(`[ifcSpike] Found ${storeyNames.length} storeys: ${storeyNames.join(", ")}`);
 
@@ -111,12 +111,12 @@ export const run = internalAction({
         sampleProperties,
         storeyNames,
         spatialStructureSummary: {
-          type: (spatialStructure as Record<string, unknown>)?.type ?? "unknown",
+          type: (spatialStructure as unknown as Record<string, unknown>)?.type ?? "unknown",
           childCount: Array.isArray(
-            (spatialStructure as Record<string, unknown>)?.children
+            (spatialStructure as unknown as Record<string, unknown>)?.children
           )
             ? (
-                (spatialStructure as Record<string, unknown>)
+                (spatialStructure as unknown as Record<string, unknown>)
                   .children as unknown[]
               ).length
             : 0,

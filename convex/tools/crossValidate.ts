@@ -180,7 +180,7 @@ function extractMark(
 
 // ── Cross-Validation Tool ──────────────────────────────────────
 
-export const crossValidateTool = createTool({
+export const crossValidateTool: any = createTool({
   description:
     "Cross-validate IFC model data against PDF schedule data. " +
     "Joins elements to schedule rows by mark/tag and compares properties. " +
@@ -208,9 +208,9 @@ export const crossValidateTool = createTool({
         "How to match elements to schedule rows: 'mark' (Tag/Reference) or 'name' (element Name)"
       ),
   }),
-  execute: async (ctx, input) => {
+  execute: async (ctx, input): Promise<string> => {
     // 1. Query IFC elements
-    const groups = await ctx.runQuery(
+    const groups: any[] = await ctx.runQuery(
       internal.tools.queries.listElementGroups,
       {
         projectId: input.projectId as GenericId<"projects">,
@@ -234,7 +234,7 @@ export const crossValidateTool = createTool({
     }> = [];
 
     for (const group of groups) {
-      const elements = await ctx.runQuery(
+      const elements: any[] = await ctx.runQuery(
         internal.tools.queries.listElementsByGroup,
         { groupId: group._id, limit: 200 }
       );
@@ -248,7 +248,7 @@ export const crossValidateTool = createTool({
     }
 
     // 2. Query PDF schedule rows
-    const scheduleRows = await ctx.runQuery(
+    const scheduleRows: any[] = await ctx.runQuery(
       internal.tools.queries.listScheduleRows,
       {
         projectId: input.projectId as GenericId<"projects">,

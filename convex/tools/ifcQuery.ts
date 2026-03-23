@@ -35,7 +35,7 @@ function resolvePropertyPath(
   return current;
 }
 
-export const queryIfcElementsTool = createTool({
+export const queryIfcElementsTool: any = createTool({
   description:
     "Query IFC building elements from the pre-extracted structured store. " +
     "Returns element properties, materials, and quantities grouped by type. " +
@@ -72,11 +72,11 @@ export const queryIfcElementsTool = createTool({
       .optional()
       .describe("Maximum number of elements to return (default 50, max 200)"),
   }),
-  execute: async (ctx, input) => {
+  execute: async (ctx, input): Promise<string> => {
     const limit = Math.min(input.limit ?? MAX_ELEMENTS, 200);
 
     // 1. Find element groups matching the type
-    const groups = await ctx.runQuery(
+    const groups: any[] = await ctx.runQuery(
       internal.tools.queries.listElementGroups,
       {
         projectId: input.projectId as GenericId<"projects">,
@@ -101,7 +101,7 @@ export const queryIfcElementsTool = createTool({
     }> = [];
 
     for (const group of groups) {
-      const elements = await ctx.runQuery(
+      const elements: any[] = await ctx.runQuery(
         internal.tools.queries.listElementsByGroup,
         {
           groupId: group._id,

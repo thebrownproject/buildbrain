@@ -25,7 +25,7 @@ import {
   extractIfcElementsTool,
 } from "../tools";
 
-export const buildBrainAgent = new Agent(components.agent, {
+export const buildBrainAgent: any = new Agent(components.agent, {
   name: "BuildBrain",
   languageModel: anthropic("claude-sonnet-4-6"),
   embeddingModel: openai.embedding("text-embedding-3-small"),

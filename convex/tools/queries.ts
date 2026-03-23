@@ -115,9 +115,9 @@ export const searchPages = internalQuery({
   handler: async (ctx, args) => {
     const limit = args.limit ?? 10;
 
-    let q = ctx.db
+    const results: any = await ctx.db
       .query("pdfPages")
-      .withSearchIndex("search_text", (search) => {
+      .withSearchIndex("search_text", (search: any) => {
         let s = search.search("text", args.query);
         if (args.fileId) {
           s = s.eq("fileId", args.fileId);
@@ -126,9 +126,10 @@ export const searchPages = internalQuery({
           s = s.eq("projectId", args.projectId);
         }
         return s;
-      });
+      })
+      .take(limit);
 
-    return await q.take(limit);
+    return results;
   },
 });
 

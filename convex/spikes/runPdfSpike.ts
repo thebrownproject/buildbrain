@@ -12,13 +12,13 @@ import { internal } from "../_generated/api";
  * Lists files in the "files" table, picks the first PDF, and runs
  * the spike extraction action against it.
  */
-export const run = action({
+export const run: any = action({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<any> => {
     // 1. Query the files table for PDF files
-    const files = await ctx.runQuery(internal.files.listAllInternal);
+    const files: any[] = await ctx.runQuery(internal.files.listAllInternal);
 
-    const pdfFile = files.find(
+    const pdfFile: any = files.find(
       (f: { type: string }) => f.type === "pdf"
     );
 
@@ -34,7 +34,7 @@ export const run = action({
     );
 
     // 2. Run the spike test action
-    const result = await ctx.runAction(
+    const result: any = await ctx.runAction(
       internal.spikes.pdfSpike.extractPdfData,
       { storageId: pdfFile.storageId }
     );

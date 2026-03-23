@@ -62,7 +62,6 @@ export const sendMessage = mutation({
         role: "user" as const,
         content: args.prompt,
       },
-      skipEmbeddings: true,
     });
 
     // Schedule the streaming action (in streaming.ts, a "use node" file)

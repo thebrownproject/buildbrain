@@ -17,7 +17,7 @@ import { internal } from "../_generated/api";
 // Maximum text snippet length per page in results
 const MAX_SNIPPET_LENGTH = 500;
 
-export const searchPagesTool = createTool({
+export const searchPagesTool: any = createTool({
   description:
     "Search across PDF pages using full-text search. Returns matching pages with " +
     "text context, page numbers, drawing numbers, and classifications. " +
@@ -42,11 +42,11 @@ export const searchPagesTool = createTool({
       .default(10)
       .describe("Maximum number of matching pages to return (default 10)"),
   }),
-  execute: async (ctx, input) => {
+  execute: async (ctx, input): Promise<string> => {
     const limit = Math.min(input.limit ?? 10, 50);
 
     // Run full-text search
-    const results = await ctx.runQuery(
+    const results: any[] = await ctx.runQuery(
       internal.tools.queries.searchPages,
       {
         query: input.query,
@@ -66,7 +66,7 @@ export const searchPagesTool = createTool({
     }
 
     // Format results with text snippets
-    const matches = results.map((page) => {
+    const matches = results.map((page: any) => {
       // Extract a relevant snippet around the search terms
       const text = page.text ?? "";
       let snippet: string;

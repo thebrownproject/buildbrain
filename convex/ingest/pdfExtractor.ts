@@ -59,7 +59,7 @@ export const extract = internalAction({
 
       // Filter to pages that have tables AND are classified as schedules
       const schedulePages = allPages.filter(
-        (p) => p.hasTable && p.classification === "schedule"
+        (p: any) => p.hasTable && p.classification === "schedule"
       );
 
       // If no schedule pages, skip to extracted

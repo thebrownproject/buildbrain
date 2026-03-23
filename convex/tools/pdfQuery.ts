@@ -17,7 +17,7 @@ import { internal } from "../_generated/api";
 
 // ── queryScheduleRowsTool ──────────────────────────────────────
 
-export const queryScheduleRowsTool = createTool({
+export const queryScheduleRowsTool: any = createTool({
   description:
     "Query extracted PDF schedule data (door/window/finish schedules). " +
     "Returns structured rows with mark and properties. " +
@@ -40,11 +40,11 @@ export const queryScheduleRowsTool = createTool({
       .optional()
       .describe("Maximum number of rows to return (default 100)"),
   }),
-  execute: async (ctx, input) => {
+  execute: async (ctx, input): Promise<string> => {
     const limit = input.limit ?? 100;
 
     // 1. Query schedule rows
-    const rows = await ctx.runQuery(
+    const rows: any[] = await ctx.runQuery(
       internal.tools.queries.listScheduleRows,
       {
         projectId: input.projectId as GenericId<"projects">,
@@ -63,9 +63,9 @@ export const queryScheduleRowsTool = createTool({
     }
 
     // 2. Apply property filter if provided
-    let filtered = rows;
+    let filtered: any[] = rows;
     if (input.filter) {
-      filtered = rows.filter((row) => {
+      filtered = rows.filter((row: any) => {
         const props = row.properties as Record<string, unknown>;
         const propValue = props[input.filter!.property];
         if (propValue == null) return false;
@@ -76,12 +76,12 @@ export const queryScheduleRowsTool = createTool({
       });
     }
 
-    const totalCount = filtered.length;
+    const totalCount: number = filtered.length;
     const truncated = filtered.length > limit;
     filtered = filtered.slice(0, limit);
 
     // 3. Format response
-    const resultRows = filtered.map((row) => ({
+    const resultRows = filtered.map((row: any) => ({
       mark: row.mark,
       properties: row.properties,
       sourcePages: row.sourcePages,
@@ -100,7 +100,7 @@ export const queryScheduleRowsTool = createTool({
 
 // ── getDrawingRegisterTool ─────────────────────────────────────
 
-export const getDrawingRegisterTool = createTool({
+export const getDrawingRegisterTool: any = createTool({
   description:
     "Get the drawing register — a list of all pages in a PDF file with their " +
     "classifications, drawing numbers, and titles. Use this to understand what " +
@@ -111,9 +111,9 @@ export const getDrawingRegisterTool = createTool({
       .string()
       .describe("The file ID of the PDF to get the drawing register for"),
   }),
-  execute: async (ctx, input) => {
+  execute: async (ctx, input): Promise<string> => {
     // 1. Query pages for this file
-    const pages = await ctx.runQuery(
+    const pages: any[] = await ctx.runQuery(
       internal.tools.queries.listPagesByFile,
       { fileId: input.fileId as GenericId<"files"> }
     );
