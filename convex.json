@@ -1,0 +1,6 @@
+{
+  "node": {
+    "externalPackages": ["web-ifc"],
+    "nodeVersion": "22"
+  }
+}
