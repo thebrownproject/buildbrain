@@ -27,8 +27,8 @@ import {
 
 export const buildBrainAgent: any = new Agent(components.agent, {
   name: "BuildBrain",
-  languageModel: anthropic("claude-sonnet-4-6"),
-  embeddingModel: openai.embedding("text-embedding-3-small"),
+  languageModel: anthropic("claude-haiku-4-5-20251001"),
+  // embeddingModel: openai.embedding("text-embedding-3-small"), // Requires OPENAI_API_KEY
   instructions:
     "You are BuildBrain, a BIM Intelligence Agent for the Australian construction industry. " +
     "You help users query IFC building models and PDF construction documents, " +
@@ -48,7 +48,7 @@ export const buildBrainAgent: any = new Agent(components.agent, {
     searchOptions: {
       limit: 10,
       textSearch: true,
-      vectorSearch: true,
+      vectorSearch: false,
     },
   },
 });
