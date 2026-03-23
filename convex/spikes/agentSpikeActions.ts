@@ -1,16 +1,19 @@
 /**
- * Spike Test: @convex-dev/agent thread + message mutations/actions
+ * Spike Test: @convex-dev/agent thread + message mutations/queries
  *
  * Demonstrates the complete flow:
  *   1. Create a thread (mutation)
  *   2. Send a user message + kick off streaming (mutation -> scheduled action)
- *   3. Stream the agent response (internal action)
- *   4. Query messages with streaming support (query)
+ *   3. Query messages with streaming support (query)
+ *
+ * NOTE: The streaming internalAction lives in agentSpikeStream.ts (a "use node"
+ * file) because it calls LLM APIs. This file must NOT use "use node" since it
+ * exports queries and mutations.
  */
 
 import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
-import { mutation, internalAction, query } from "../_generated/server";
+import { mutation, query } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { components } from "../_generated/api";
 import {
@@ -20,7 +23,6 @@ import {
   syncStreams,
   vStreamArgs,
 } from "@convex-dev/agent";
-import { spikeTestAgent } from "./agentSpike";
 
 // ── 1. Create Thread ────────────────────────────────────────────────────
 // Uses the standalone `createThread` function from @convex-dev/agent.
@@ -57,8 +59,8 @@ export const sendSpikeMessage = mutation({
       },
     });
 
-    // Schedule the streaming action to run in the background
-    await ctx.scheduler.runAfter(0, internal.spikes.agentSpikeActions.streamResponse, {
+    // Schedule the streaming action (in agentSpikeStream.ts, a "use node" file)
+    await ctx.scheduler.runAfter(0, internal.spikes.agentSpikeStream.streamResponse, {
       threadId: args.threadId,
       promptMessageId: messageId,
     });
@@ -67,33 +69,7 @@ export const sendSpikeMessage = mutation({
   },
 });
 
-// ── 3. Stream Response (internal action) ────────────────────────────────
-// Continues the thread and calls streamText with saveStreamDeltas enabled.
-// This runs in a Convex action (Node.js runtime) because it calls the LLM.
-export const streamResponse = internalAction({
-  args: {
-    threadId: v.string(),
-    promptMessageId: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const { thread } = await spikeTestAgent.continueThread(ctx, {
-      threadId: args.threadId,
-    });
-
-    // streamText with delta persistence for real-time streaming to the frontend
-    const result = await thread.streamText(
-      { promptMessageId: args.promptMessageId },
-      { saveStreamDeltas: true },
-    );
-
-    // Consume the full stream so all steps complete and messages are saved.
-    // In a real app you might also do something with the text, e.g. log it.
-    const _text = await result.text;
-    return { text: _text };
-  },
-});
-
-// ── 4. List Messages (query) ────────────────────────────────────────────
+// ── 3. List Messages (query) ────────────────────────────────────────────
 // Returns paginated UIMessages merged with any active stream deltas.
 // The frontend calls this via useUIMessages (see SPIKE_NOTES.md).
 export const listSpikeMessages = query({
