@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 
 const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024; // 500MB
 
@@ -55,7 +56,7 @@ export const saveUpload = mutation({
     const sameNameFiles = existingFiles.filter((f) => f.name === args.name);
     const revisionNumber = sameNameFiles.length + 1;
 
-    return await ctx.db.insert("files", {
+    const fileId = await ctx.db.insert("files", {
       projectId: args.projectId,
       storageId: args.storageId,
       name: args.name,
@@ -64,7 +65,17 @@ export const saveUpload = mutation({
       uploadedBy: args.uploadedBy,
       uploadedAt: Date.now(),
       revisionNumber,
+      extractionStatus: "pending",
     });
+
+    // Trigger the document intelligence pipeline
+    await ctx.scheduler.runAfter(
+      0,
+      internal.ingest.pipeline.triggerPipeline,
+      { fileId, projectId: args.projectId }
+    );
+
+    return fileId;
   },
 });
 
