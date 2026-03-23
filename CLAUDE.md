@@ -4,19 +4,20 @@ BIM Intelligence Agent -- full-stack web app for querying IFC building models an
 
 ## Architecture
 
-Three-tier architecture:
+Two-tier architecture:
 
 ```
-Next.js (Vercel)  <-->  Convex (backend)  <-->  Agent VM (sprites.dev)
+Next.js 15 (Vercel)  <-->  Convex (everything else)
 ```
+
+No VM. No Docker. No Python. No separate microservice.
 
 - **Frontend**: Next.js 15, React 19, Tailwind v4, shadcn/ui, dockview v5 (4-panel layout)
-- **Backend**: Convex (10 tables, real-time subscriptions, file storage, Clerk auth)
-- **Agent VM**: Pi SDK (RPC mode) + Python CLI tools (IfcOpenShell, pdfplumber) on sprites.dev
+- **Backend**: Convex (agent orchestration, file storage, real-time streaming, document intelligence, Clerk auth)
 
 ## Key Principle
 
-**LLMs never do arithmetic.** IfcOpenShell computes all quantities. The agent only formats, reasons, and cross-validates.
+**LLMs never do arithmetic.** web-ifc computes all quantities via Qto property sets. The agent only formats, reasons, and cross-validates.
 
 ## Project Structure
 
@@ -32,32 +33,55 @@ buildbrain/
 │   ├── providers.tsx            # Convex + Clerk providers
 │   └── ui/                      # shadcn/ui components
 ├── convex/                      # Convex backend
-│   ├── schema.ts                # 10-table schema
+│   ├── convex.config.ts         # App config + agent component registration
+│   ├── schema.ts                # Schema (app tables + agent component tables)
+│   ├── agents/                  # Convex Agent definition, streaming, actions
+│   │   ├── definition.ts        # Agent config (model, tools, context)
+│   │   ├── actions.ts           # Queries/mutations (sendMessage, listMessages)
+│   │   └── streaming.ts         # Stream response action
+│   ├── tools/                   # Agent tools (query pre-extracted data)
+│   │   ├── ifc-query.ts         # Query IFC elements from structured store
+│   │   ├── pdf-query.ts         # Query PDF schedule rows + drawing register
+│   │   ├── cross-validate.ts    # Cross-validation: join elements vs schedule rows
+│   │   ├── search.ts            # Full-text + semantic search across PDF pages
+│   │   ├── ifc-extract.ts       # On-demand IFC extraction trigger
+│   │   └── index.ts             # Re-exports all tools
+│   ├── ifc/                     # web-ifc extraction library
+│   │   ├── parser.ts            # Core IFC parsing with web-ifc WASM
+│   │   ├── properties.ts        # Pset/Qto extraction
+│   │   ├── materials.ts         # Material traversal (all 6 patterns)
+│   │   ├── quantities.ts        # Qto extraction
+│   │   ├── spatial.ts           # Spatial hierarchy + storey resolution
+│   │   ├── validate.ts          # Data quality checks
+│   │   └── types.ts             # TypeScript types for IFC data
+│   ├── pdf/                     # PDF extraction library
+│   │   ├── parser.ts            # pdf.js text extraction
+│   │   ├── tables.ts            # Grid-based table detection
+│   │   ├── schedules.ts         # Schedule classification + multi-page merging
+│   │   ├── classifier.ts        # Page classification
+│   │   └── types.ts             # TypeScript types for PDF data
+│   ├── ingest/                  # Document intelligence pipeline
+│   │   ├── pipeline.ts          # Pipeline orchestration + status tracking
+│   │   ├── ifc-scanner.ts       # Phase 0: IFC manifest generation
+│   │   ├── ifc-extractor.ts     # Phase 1: Deep IFC extraction
+│   │   ├── pdf-scanner.ts       # Phase 0: PDF manifest generation
+│   │   └── pdf-extractor.ts     # Phase 1: Table extraction + schedule classification
 │   ├── auth.config.ts           # Clerk auth config
-│   ├── crons.ts                 # Stale job detector
 │   ├── seed.ts                  # Test fixtures
-│   └── *.ts                     # Domain modules (queries + mutations)
-├── agent/                       # Agent VM service
-│   ├── src/
-│   │   ├── index.ts             # Entry point, job queue
-│   │   ├── agent-session.ts     # Pi SDK integration
-│   │   ├── tool-runner.ts       # Python subprocess executor
-│   │   ├── stream-writer.ts     # Throttled delta writes
-│   │   └── tools/               # CLI tool definitions
-│   └── Dockerfile               # VM deployment image
-├── hooks/                       # React hooks (streaming, project data, chat)
+│   └── *.ts                     # Domain modules (files, projects, users, artifacts, etc.)
+├── hooks/                       # React hooks (chat via Convex Agent, project data)
 ├── lib/                         # Utils, types, contexts
 │   └── dock/                    # Dockview constants + helpers
+├── agent/                       # [V2 legacy] Agent VM service -- pending removal
 ├── skills/                      # Claude Code plugin skills (V1)
-│   └── cli-tools/scripts/       # Python CLI tools
 ├── specs/                       # Specifications
 │   ├── spec.md                  # V1 PRD
-│   └── v2-vision.md             # V2 vision doc
+│   ├── v2-vision.md             # V2 vision doc
+│   └── v3-architecture.md       # V3 architecture spec (current)
 ├── scripts/                     # Utility scripts (style extraction)
 ├── public/                      # Static assets (IFC samples, workers, PDFs)
 ├── data/                        # Input files (gitignored)
-├── output/                      # Generated reports + design tokens (gitignored)
-└── requirements.txt             # Python deps
+└── output/                      # Generated reports + design tokens (gitignored)
 ```
 
 ## Panels
@@ -71,21 +95,40 @@ buildbrain/
 
 ## Convex Schema
 
-10 tables: `users`, `projects`, `files`, `threads`, `messages`, `streamDeltas`, `agentJobs`, `artifacts`, `issues`, `elementGroups` + `elements`
+App tables: `users`, `projects`, `files`, `artifacts`, `issues`, `elementGroups`, `elements`, `pdfPages`, `pdfScheduleRows`, `projectThreads`
+
+Agent component tables (managed by `@convex-dev/agent`): threads, messages, streamDeltas
 
 Key patterns:
-- `agentJobs` is the coordination layer (frontend -> Convex -> agent VM)
-- `streamDeltas` for ephemeral chat streaming (cleaned up after finalize)
+- `projectThreads` links Convex Agent threads to projects
+- `pdfPages` + `pdfScheduleRows` are the document intelligence cache (populated by ingest pipeline)
+- `files.extractionStatus` tracks pipeline progress (pending -> scanning -> scanned -> extracting -> extracted -> ready)
+- `files.manifest` stores lightweight file summaries loaded into agent system prompt
 - Hybrid artifact storage (inline <100KB, file storage for large)
-- Clerk auth (free tier, 50K MRUs)
+- Clerk auth (OIDC/JWT)
 
-## Agent VM
+## Document Intelligence Pipeline
 
-Stateless compute on sprites.dev. Pulls files from Convex, processes with Python tools, pushes results back.
+Files are processed on upload into a structured store. The agent queries pre-extracted data, never raw files.
 
-- Pi SDK in RPC mode with 5 registered CLI tools (14 commands total)
-- Convex WebSocket subscription for real-time job pickup
-- Heartbeat + stale job detection for crash recovery
+```
+Upload -> Phase 0: Manifest (fast, <5s) -> Phase 1: Deep Extraction (background) -> Phase 2: Search Index
+```
+
+File manifests give the agent orientation about what data is available (like a CLAUDE.md for each document).
+
+## Agent Tools
+
+Tools query pre-extracted data -- they are database queries, not parsers.
+
+| Tool | Description |
+|------|-------------|
+| queryIfcElements | Look up IFC element properties, quantities, materials |
+| queryScheduleRows | Look up PDF schedule data (door/window/finish schedules) |
+| getDrawingRegister | Get page index with classifications and drawing numbers |
+| crossValidate | Compare IFC elements against PDF schedule rows by mark/tag |
+| searchPages | Full-text + semantic search across PDF pages |
+| extractIfcElements | Trigger on-demand extraction for a specific element type |
 
 ## Design
 
@@ -97,17 +140,19 @@ Key values: Inter Variable font, LCH color space (hue 282), font-weight 450 for 
 
 - **Frontend:** Next.js 15, React 19, Tailwind v4, shadcn/ui, dockview v5
 - **IFC Viewer:** @thatopen/components (Three.js + web-ifc WASM)
-- **Backend:** Convex (real-time, file storage, crons)
+- **Backend:** Convex (real-time, file storage, agent orchestration)
+- **Agent:** @convex-dev/agent v0.6.x, AI SDK v6, Anthropic Claude, OpenAI embeddings
+- **IFC Parsing:** web-ifc (WASM, server-side in Convex actions)
+- **PDF Parsing:** pdfjs-dist (legacy build, server-side in Convex actions)
 - **Auth:** Clerk (OIDC/JWT)
-- **Agent:** Pi SDK, IfcOpenShell 0.8.x, pdfplumber, pandas
-- **Deployment:** Vercel (frontend), Convex cloud (backend), sprites.dev VM (agent)
+- **Deployment:** Vercel (frontend), Convex cloud (backend)
 
 ## References
 
-Full spec: `specs/spec.md`
+Full V3 spec: `specs/v3-architecture.md`
+V1 spec: `specs/spec.md`
 V2 vision: `specs/v2-vision.md`
 Design tokens: `output/linear-app-tokens-merged.json`
-CLI reference: `/cli-tools`
 
 <!-- convex-ai-start -->
 This project uses [Convex](https://convex.dev) as its backend.
